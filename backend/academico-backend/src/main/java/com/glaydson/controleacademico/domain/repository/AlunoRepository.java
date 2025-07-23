@@ -1,4 +1,4 @@
-package com.glaydson.controleacademico.domain.repo;
+package com.glaydson.controleacademico.domain.repository;
 
 import com.glaydson.controleacademico.domain.model.Aluno;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
