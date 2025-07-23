@@ -1,4 +1,7 @@
 package com.glaydson.controleacademico.domain.repo;
 
-public class CoordenadorRepository {
+import com.glaydson.controleacademico.domain.model.Coordenador;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
+public class CoordenadorRepository implements PanacheRepository<Coordenador> {
 }

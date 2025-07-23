@@ -1,4 +1,10 @@
 package com.glaydson.controleacademico.domain.repo;
 
-public class AlunoRepository {
+import com.glaydson.controleacademico.domain.model.Aluno;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class AlunoRepository implements PanacheRepository<Aluno> {
+    // Métodos de consulta customizados, se precisar
 }

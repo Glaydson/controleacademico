@@ -1,4 +1,7 @@
 package com.glaydson.controleacademico.domain.repo;
 
-public class SemestreRepository {
+import com.glaydson.controleacademico.domain.model.Semestre;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
+public class SemestreRepository implements PanacheRepository<Semestre> {
 }
