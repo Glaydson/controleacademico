@@ -1,0 +1,42 @@
+# controle-academico/docker-compose.yml
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.1
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: keycloak_password
+      KC_HOSTNAME: http://localhost:8080
+      KC_HTTP_ENABLED: 'true'
+      KC_FEATURES: 'token-exchange,admin-fine-grained-authz'
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak-db
+    networks:
+      - app-network
+    command: 
+      - start-dev 
+
+  keycloak-db:
+    image: postgres:17
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_user
+      POSTGRES_PASSWORD: keycloak_password
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  keycloak_data:
+
+networks:
+  app-network:
+    driver: bridge
