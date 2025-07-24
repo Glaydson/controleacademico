@@ -1,16 +1,19 @@
 package com.glaydson.controleacademico.rest;
 
 import com.glaydson.controleacademico.domain.model.Semestre;
+import com.glaydson.controleacademico.rest.dto.SemestreRequestDTO;
 import com.glaydson.controleacademico.service.SemestreService;
+import com.glaydson.controleacademico.rest.dto.SemestreResponseDTO; // Importa DTO de saída
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import jakarta.validation.Valid; // Para validação de DTOs
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/semestres")
 @ApplicationScoped
@@ -21,40 +24,43 @@ public class SemestreResource {
     SemestreService semestreService;
 
     public SemestreResource(SemestreService semestreService) {
-        this.semestreService = semestreService; // Construtor para injeção de dependência
+        this.semestreService = semestreService;
     }
 
     @GET
-    @RolesAllowed({"ADMIN", "COORDENADOR", "ALUNO", "PROFESSOR"}) // Todos podem ver os semestres
-    public List<Semestre> listarTodosSemestres() {
-        return semestreService.listarTodosSemestres();
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"}) // Todos podem ver os semestres
+    public List<SemestreResponseDTO> listarTodosSemestres() { // Retorna lista de DTOs
+        return semestreService.listarTodosSemestres().stream()
+                .map(SemestreResponseDTO::new) // Converte entidade para DTO
+                .collect(Collectors.toList());
     }
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "COORDENADOR", "ALUNO", "PROFESSOR"})
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"})
     public Response buscarSemestrePorId(@PathParam("id") Long id) {
         return semestreService.buscarSemestrePorId(id)
-                .map(semestre -> Response.ok(semestre).build())
+                .map(semestre -> Response.ok(new SemestreResponseDTO(semestre)).build()) // Converte entidade para DTO
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @GET
-    @Path("/nome/{nome}")
-    @RolesAllowed({"ADMIN", "COORDENADOR", "ALUNO", "PROFESSOR"})
-    public Response buscarSemestrePorNome(@PathParam("nome") String nome) {
-        return semestreService.buscarSemestrePorNome(nome)
-                .map(semestre -> Response.ok(semestre).build())
+    @Path("/ano/{ano}/periodo/{periodo}")
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"})
+    public Response buscarSemestrePorAnoPeriodo(@PathParam("ano") Integer ano, @PathParam("periodo") String periodo) {
+        return semestreService.buscarSemestrePorAnoPeriodo(ano, periodo)
+                .map(semestre -> Response.ok(new SemestreResponseDTO(semestre)).build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @POST
-    @RolesAllowed({"ADMIN", "COORDENADOR"}) // Admin e Coordenador podem criar semestres
-    public Response criarSemestre(Semestre semestre) {
+    @RolesAllowed({"COORDENADOR"}) // Apenas coordenadores podem criar semestres
+    public Response criarSemestre(@Valid SemestreRequestDTO semestreDto) { // Recebe DTO para criação
         try {
-            Semestre novoSemestre = semestreService.criarSemestre(semestre);
-            return Response.created(UriBuilder.fromResource(SemestreResource.class).path(novoSemestre.id.toString()).build())
-                    .entity(novoSemestre)
+            Semestre novoSemestre = semestreService.criarSemestre(semestreDto); // Serviço recebe DTO
+            SemestreResponseDTO responseDto = new SemestreResponseDTO(novoSemestre); // Converte entidade persistida para DTO
+            return Response.created(UriBuilder.fromResource(SemestreResource.class).path(responseDto.id.toString()).build())
+                    .entity(responseDto) // Retorna DTO
                     .build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -63,11 +69,12 @@ public class SemestreResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "COORDENADOR"}) // Admin e Coordenador podem atualizar semestres
-    public Response atualizarSemestre(@PathParam("id") Long id, Semestre semestreAtualizado) {
+    @RolesAllowed({"COORDENADOR"}) // Apenas coordenadores podem atualizar semestres
+    public Response atualizarSemestre(@PathParam("id") Long id, @Valid SemestreRequestDTO semestreDto) { // Recebe DTO para atualização
         try {
-            Semestre semestre = semestreService.atualizarSemestre(id, semestreAtualizado);
-            return Response.ok(semestre).build();
+            Semestre semestre = semestreService.atualizarSemestre(id, semestreDto); // Serviço recebe DTO
+            SemestreResponseDTO responseDto = new SemestreResponseDTO(semestre); // Converte entidade atualizada para DTO
+            return Response.ok(responseDto).build(); // Retorna DTO
         } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (BadRequestException e) {
@@ -77,7 +84,7 @@ public class SemestreResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("ADMIN") // Apenas administradores podem deletar semestres
+    @RolesAllowed("COORDENADOR") // Apenas coordenadores podem deletar semestres
     public Response deletarSemestre(@PathParam("id") Long id) {
         boolean deletado = semestreService.deletarSemestre(id);
         if (deletado) {

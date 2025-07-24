@@ -39,9 +39,9 @@ public class ProfessorResource {
     }
 
     @GET
-    @Path("/registro/{registro}")
+    @Path("/matricula/{matricula}")
     @RolesAllowed({"ADMIN", "COORDENADOR", "PROFESSOR"})
-    public Response buscarProfessorPorRegistro(@PathParam("registro") String registro) {
+    public Response buscarProfessorPorRegistro(@PathParam("matricula") String registro) {
         return professorService.buscarProfessorPorRegistro(registro)
                 .map(professor -> Response.ok(professor).build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());

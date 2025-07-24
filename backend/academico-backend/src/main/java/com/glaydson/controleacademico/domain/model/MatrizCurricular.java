@@ -6,7 +6,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"curso_id", "semestre_id"})) // Garante unicidade por Curso e Semestre
+@Table(name = "matriz_curricular",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"curso_id", "semestre_id"})) // Garante unicidade por Curso e Semestre
+@SequenceGenerator(name = "matriz_curricular_seq",
+        sequenceName = "matriz_curricular_seq", allocationSize = 1)
 public class MatrizCurricular extends PanacheEntity {
 
     @ManyToOne

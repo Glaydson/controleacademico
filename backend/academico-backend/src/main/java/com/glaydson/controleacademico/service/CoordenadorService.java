@@ -1,9 +1,11 @@
 package com.glaydson.controleacademico.service;
 
 import com.glaydson.controleacademico.domain.model.Coordenador;
+import com.glaydson.controleacademico.domain.model.Curso;
 import com.glaydson.controleacademico.domain.repository.CoordenadorRepository;
+import com.glaydson.controleacademico.domain.repository.CursoRepository;
+import com.glaydson.controleacademico.rest.dto.CoordenadorRequestDTO;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -15,9 +17,11 @@ import java.util.Optional;
 public class CoordenadorService {
 
     CoordenadorRepository coordenadorRepository;
+    CursoRepository cursoRepository;
 
-    public CoordenadorService(CoordenadorRepository coordenadorRepository) {
+    public CoordenadorService(CoordenadorRepository coordenadorRepository, CursoRepository cursoRepository) {
         this.coordenadorRepository = coordenadorRepository;
+        this.cursoRepository = cursoRepository;
     }
 
     public List<Coordenador> listarTodosCoordenadores() {
@@ -28,33 +32,65 @@ public class CoordenadorService {
         return coordenadorRepository.findByIdOptional(id);
     }
 
-    public Optional<Coordenador> buscarCoordenadorPorRegistro(String registro) {
-        return coordenadorRepository.find("registro", registro).firstResultOptional();
+    public Optional<Coordenador> buscarCoordenadorPorMatricula(String matricula) {
+        return coordenadorRepository.find("matriculaFuncional", matricula).firstResultOptional();
     }
 
     @Transactional
-    public Coordenador criarCoordenador(Coordenador coordenador) {
-        if (coordenador.getId() != null) {
-            throw new BadRequestException("ID deve ser nulo para criar um novo coordenador.");
+    public Coordenador criarCoordenador(CoordenadorRequestDTO coordenadorDto) { // Recebe o DTO
+        if (coordenadorRepository.find("matriculaFuncional", coordenadorDto.matricula).count() > 0) {
+            throw new BadRequestException("Já existe um coordenador com a matrícula " + coordenadorDto.matricula);
         }
-        // Exemplo de validação de negócio: garantir que o registro seja único
-        if (coordenadorRepository.find("registro", coordenador.getRegistro()).count() > 0) {
-            throw new BadRequestException("Já existe um coordenador com o registro " + coordenador.getRegistro());
+
+        // Valida se o curso já tem um coordenador
+        Curso cursoExistente = cursoRepository.findByIdOptional(coordenadorDto.cursoId)
+                .orElseThrow(() -> new NotFoundException("Curso com ID " + coordenadorDto.cursoId + " não encontrado."));
+
+        if (coordenadorRepository.find("curso", cursoExistente).count() > 0) {
+            throw new BadRequestException("O Curso '" + cursoExistente.nome + "' já possui um coordenador.");
         }
+
+
+        Coordenador coordenador = new Coordenador(); // Cria a entidade
+        coordenador.nome = coordenadorDto.nome;
+        coordenador.matricula = coordenadorDto.matricula;
+        coordenador.curso = cursoExistente; // Associa a entidade Curso gerenciada
+
         coordenadorRepository.persist(coordenador);
         return coordenador;
     }
 
     @Transactional
-    public Coordenador atualizarCoordenador(Long id, Coordenador coordenadorAtualizado) {
+    public Coordenador atualizarCoordenador(Long id, CoordenadorRequestDTO coordenadorDto) { // Pode reutilizar o DTO de criação para atualização simples
         Coordenador coordenadorExistente = coordenadorRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Coordenador com ID " + id + " não encontrado."));
 
-        // Atualiza os campos
-        coordenadorExistente.setNome(coordenadorAtualizado.getNome());
-        coordenadorExistente.setRegistro(coordenadorAtualizado.getRegistro());
+        // Validação de unicidade para matrícula (se alterada)
+        if (!coordenadorExistente.matricula.equals(coordenadorDto.matricula) &&
+                coordenadorRepository.find("matriculaFuncional", coordenadorDto.matricula).count() > 0) {
+            throw new BadRequestException("Já existe outro coordenador com a matrícula " + coordenadorDto.matricula);
+        }
 
-        // O Panache detecta as alterações e as persiste na transação
+        coordenadorExistente.nome = coordenadorDto.nome;
+        coordenadorExistente.matricula = coordenadorDto.matricula;
+
+        // Lógica de atualização de curso
+        if (coordenadorDto.cursoId != null) {
+            Curso novoCurso = cursoRepository.findByIdOptional(coordenadorDto.cursoId)
+                    .orElseThrow(() -> new NotFoundException("Curso com ID " + coordenadorDto.cursoId + " não encontrado."));
+
+            // Verifica se o novo curso já tem um coordenador (diferente do coordenador atual)
+            // Usamos como regra que a alteração do coordenador do curso deve ser feita no curso.
+            if (!coordenadorExistente.curso.equals(novoCurso) &&
+                    coordenadorRepository.find("curso = ?1 and id <> ?2", novoCurso, id).count() > 0) {
+                throw new BadRequestException("O Curso '" + novoCurso.nome + "' já possui um coordenador.");
+            }
+
+            coordenadorExistente.curso = novoCurso;
+        } else {
+            throw new BadRequestException("O ID do curso é obrigatório para atualização do coordenador.");
+        }
+
         return coordenadorExistente;
     }
 

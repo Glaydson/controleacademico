@@ -1,16 +1,19 @@
 package com.glaydson.controleacademico.rest;
 
 import com.glaydson.controleacademico.domain.model.Coordenador;
+import com.glaydson.controleacademico.rest.dto.CoordenadorRequestDTO;
+import com.glaydson.controleacademico.rest.dto.CoordenadorResponseDTO;
 import com.glaydson.controleacademico.service.CoordenadorService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/coordenadores")
 @ApplicationScoped
@@ -26,49 +29,55 @@ public class CoordenadorResource {
     }
 
     @GET
-    @RolesAllowed({"ADMIN", "COORDENADOR"}) // Coordenadores podem ver outros coordenadores
-    public List<Coordenador> listarTodosCoordenadores() {
-        return coordenadorService.listarTodosCoordenadores();
+    @RolesAllowed({"ADMIN"})
+    public List<CoordenadorResponseDTO> listarTodosCoordenadores() {
+        return coordenadorService.listarTodosCoordenadores().stream()
+                .map(CoordenadorResponseDTO::new) // Converte entidade para DTO
+                .collect(Collectors.toList());
     }
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "COORDENADOR"})
+    @RolesAllowed({"ADMIN"})
     public Response buscarCoordenadorPorId(@PathParam("id") Long id) {
         return coordenadorService.buscarCoordenadorPorId(id)
-                .map(coordenador -> Response.ok(coordenador).build())
+                .map(coordenador -> Response.ok(new CoordenadorResponseDTO(coordenador)).build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @GET
-    @Path("/registro/{registro}")
-    @RolesAllowed({"ADMIN", "COORDENADOR"})
-    public Response buscarCoordenadorPorRegistro(@PathParam("registro") String registro) {
-        return coordenadorService.buscarCoordenadorPorRegistro(registro)
-                .map(coordenador -> Response.ok(coordenador).build())
+    @Path("/matricula/{matricula}")
+    @RolesAllowed({"ADMIN"})
+    public Response buscarCoordenadorPorMatricula(@PathParam("matricula") String matricula) {
+        return coordenadorService.buscarCoordenadorPorMatricula(matricula)
+                .map(coordenador -> Response.ok(new CoordenadorResponseDTO(coordenador)).build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @POST
-    @RolesAllowed("ADMIN") // Apenas administradores criam coordenadores
-    public Response criarCoordenador(Coordenador coordenador) {
+    @RolesAllowed("ADMIN") // Apenas administradores podem criar coordenadores
+    public Response criarCoordenador(@Valid CoordenadorRequestDTO coordenadorDto) {
         try {
-            Coordenador novoCoordenador = coordenadorService.criarCoordenador(coordenador);
-            return Response.created(UriBuilder.fromResource(CoordenadorResource.class).path(novoCoordenador.getId().toString()).build())
-                    .entity(novoCoordenador)
+            Coordenador novoCoordenador = coordenadorService.criarCoordenador(coordenadorDto);
+            CoordenadorResponseDTO responseDto = new CoordenadorResponseDTO(novoCoordenador);
+            return Response.created(UriBuilder.fromResource(CoordenadorResource.class).path(responseDto.id.toString()).build())
+                    .entity(responseDto)
                     .build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         }
     }
 
     @PUT
     @Path("/{id}")
     @RolesAllowed("ADMIN") // Apenas administradores atualizam coordenadores
-    public Response atualizarCoordenador(@PathParam("id") Long id, Coordenador coordenadorAtualizado) {
+    public Response atualizarCoordenador(@PathParam("id") Long id, @Valid CoordenadorRequestDTO coordenadorDto) {
         try {
-            Coordenador coordenador = coordenadorService.atualizarCoordenador(id, coordenadorAtualizado);
-            return Response.ok(coordenador).build();
+            Coordenador coordenador = coordenadorService.atualizarCoordenador(id, coordenadorDto);
+            CoordenadorResponseDTO responseDto = new CoordenadorResponseDTO(coordenador);
+            return Response.ok(responseDto).build();
         } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (BadRequestException e) {

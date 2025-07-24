@@ -8,6 +8,7 @@ import com.glaydson.controleacademico.domain.repository.CursoRepository;
 import com.glaydson.controleacademico.domain.repository.DisciplinaRepository;
 import com.glaydson.controleacademico.domain.repository.MatrizCurricularRepository;
 import com.glaydson.controleacademico.domain.repository.SemestreRepository;
+import com.glaydson.controleacademico.rest.dto.MatrizCurricularRequestDTO;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
@@ -44,87 +45,80 @@ public class MatrizCurricularService {
     }
 
     @Transactional
-    public MatrizCurricular criarMatrizCurricular(MatrizCurricular matrizCurricular) {
-        if (matrizCurricular.id != null) {
-            throw new BadRequestException("ID deve ser nulo para criar uma nova matriz curricular.");
-        }
-        if (matrizCurricular.getCurso() == null || matrizCurricular.getCurso().id == null) {
+    public MatrizCurricular criarMatrizCurricular(MatrizCurricularRequestDTO matrizDto) {// Recebe DTO
+
+        if (matrizDto.getCursoId() == null ) {
             throw new BadRequestException("Uma matriz curricular deve estar associada a um curso válido.");
         }
-        if (matrizCurricular.getSemestre() == null || matrizCurricular.getSemestre().id == null) {
+        if (matrizDto.getSemestreId() == null ) {
             throw new BadRequestException("Uma matriz curricular deve estar associada a um semestre válido.");
         }
 
         // Valida e busca as entidades gerenciadas
-        Curso cursoExistente = cursoRepository.findByIdOptional(matrizCurricular.getCurso().id)
-                .orElseThrow(() -> new NotFoundException("Curso com ID " + matrizCurricular.getCurso().id + " não encontrado."));
-        Semestre semestreExistente = semestreRepository.findByIdOptional(matrizCurricular.getSemestre().id)
-                .orElseThrow(() -> new NotFoundException("Semestre com ID " + matrizCurricular.getSemestre().id + " não encontrado."));
+        Curso cursoExistente = cursoRepository.findByIdOptional(matrizDto.cursoId) // Usa cursoId do DTO
+                .orElseThrow(() -> new NotFoundException("Curso com ID " + matrizDto.cursoId + " não encontrado."));
+        Semestre semestreExistente = semestreRepository.findByIdOptional(matrizDto.semestreId) // Usa semestreId do DTO
+                .orElseThrow(() -> new NotFoundException("Semestre com ID " + matrizDto.semestreId + " não encontrado."));
 
         // Garante que não haja duplicidade de matriz curricular para o mesmo curso e semestre
         if (matrizCurricularRepository.find("curso = ?1 and semestre = ?2", cursoExistente, semestreExistente).count() > 0) {
-            throw new BadRequestException("Já existe uma matriz curricular para o Curso '" + cursoExistente.getNome() + "' e Semestre '" + semestreExistente.getNome() + "'.");
+            throw new BadRequestException("Já existe uma matriz curricular para o Curso '" + cursoExistente.getNome() + "' e Semestre '" + semestreExistente.getPeriodo() + "'.");
         }
 
+        MatrizCurricular matrizCurricular = new MatrizCurricular(); // Nova entidade
         matrizCurricular.setCurso(cursoExistente);
         matrizCurricular.setSemestre(semestreExistente);
 
         // Associa disciplinas
         Set<Disciplina> disciplinasGerenciadas = new HashSet<>();
-        if (matrizCurricular.getDisciplinas() != null && !matrizCurricular.getDisciplinas().isEmpty()) {
-            for (Disciplina disciplina : matrizCurricular.getDisciplinas()) {
-                if (disciplina.id == null) {
-                    throw new BadRequestException("IDs de disciplina devem ser fornecidos para associar à matriz.");
-                }
-                Disciplina disciplinaExistente = disciplinaRepository.findByIdOptional(disciplina.id)
-                        .orElseThrow(() -> new NotFoundException("Disciplina com ID " + disciplina.id + " não encontrada."));
+        if (matrizDto.disciplinaIds != null && !matrizDto.disciplinaIds.isEmpty()) { // Usa disciplinaIds do DTO
+            for (Long disciplinaId : matrizDto.disciplinaIds) {
+                Disciplina disciplinaExistente = disciplinaRepository.findByIdOptional(disciplinaId)
+                        .orElseThrow(() -> new NotFoundException("Disciplina com ID " + disciplinaId + " não encontrada."));
                 disciplinasGerenciadas.add(disciplinaExistente);
             }
         }
         matrizCurricular.setDisciplinas(disciplinasGerenciadas);
 
         matrizCurricularRepository.persist(matrizCurricular);
-        return matrizCurricular;
+        return matrizCurricular; // Retorna a entidade persistida
     }
 
+
     @Transactional
-    public MatrizCurricular atualizarMatrizCurricular(Long id, MatrizCurricular matrizAtualizada) {
+    public MatrizCurricular atualizarMatrizCurricular(Long id, MatrizCurricularRequestDTO matrizDto) { // Recebe DTO
         MatrizCurricular matrizExistente = matrizCurricularRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Matriz Curricular com ID " + id + " não encontrada."));
 
         // Atualiza curso e semestre se fornecidos (e valida)
-        if (matrizAtualizada.getCurso() != null && matrizAtualizada.getCurso().id != null) {
-            Curso novoCurso = cursoRepository.findByIdOptional(matrizAtualizada.getCurso().id)
-                    .orElseThrow(() -> new NotFoundException("Curso com ID " + matrizAtualizada.getCurso().id + " não encontrado."));
+        if (matrizDto.cursoId != null) {
+            Curso novoCurso = cursoRepository.findByIdOptional(matrizDto.cursoId)
+                    .orElseThrow(() -> new NotFoundException("Curso com ID " + matrizDto.cursoId + " não encontrado."));
             matrizExistente.setCurso(novoCurso);
         }
-        if (matrizAtualizada.getSemestre() != null && matrizAtualizada.getSemestre().id != null) {
-            Semestre novoSemestre = semestreRepository.findByIdOptional(matrizAtualizada.getSemestre().id)
-                    .orElseThrow(() -> new NotFoundException("Semestre com ID " + matrizAtualizada.getSemestre().id + " não encontrado."));
+        if (matrizDto.semestreId != null) {
+            Semestre novoSemestre = semestreRepository.findByIdOptional(matrizDto.semestreId)
+                    .orElseThrow(() -> new NotFoundException("Semestre com ID " + matrizDto.semestreId + " não encontrado."));
             matrizExistente.setSemestre(novoSemestre);
         }
 
         // Revalida unicidade caso curso ou semestre tenham sido alterados
-        if (matrizCurricularRepository
-                .find("curso = ?1 and semestre = ?2 and id <> ?3", matrizExistente.getCurso(), matrizExistente.getSemestre(), matrizExistente.id).count() > 0) {
+        if (matrizCurricularRepository.find("curso = ?1 and semestre = ?2 and id <> ?3", matrizExistente.getCurso(), matrizExistente.getSemestre(), matrizExistente.id).count() > 0) {
             throw new BadRequestException("Já existe outra matriz curricular com o mesmo Curso e Semestre.");
         }
 
         // Atualiza a lista de disciplinas
         Set<Disciplina> disciplinasAtualizadas = new HashSet<>();
-        if (matrizAtualizada.getDisciplinas() != null && !matrizAtualizada.getDisciplinas().isEmpty()) {
-            for (Disciplina disciplina : matrizAtualizada.getDisciplinas()) {
-                if (disciplina.id == null) {
-                    throw new BadRequestException("IDs de disciplina devem ser fornecidos para associar à matriz.");
-                }
-                Disciplina disciplinaExistente = disciplinaRepository.findByIdOptional(disciplina.id)
-                        .orElseThrow(() -> new NotFoundException("Disciplina com ID " + disciplina.id + " não encontrada."));
+        if (matrizDto.disciplinaIds != null && !matrizDto.disciplinaIds.isEmpty()) {
+            for (Long disciplinaId : matrizDto.disciplinaIds) {
+                Disciplina disciplinaExistente = disciplinaRepository.findByIdOptional(disciplinaId)
+                        .orElseThrow(() -> new NotFoundException("Disciplina com ID " + disciplinaId + " não encontrada."));
                 disciplinasAtualizadas.add(disciplinaExistente);
             }
         }
         matrizExistente.setDisciplinas(disciplinasAtualizadas);
 
-        return matrizExistente;
+        return matrizExistente; // Retorna a entidade atualizada
     }
 
     @Transactional

@@ -4,8 +4,8 @@ import com.glaydson.controleacademico.domain.model.Aluno;
 import com.glaydson.controleacademico.domain.model.Curso; // Importar Curso
 import com.glaydson.controleacademico.domain.repository.AlunoRepository;
 import com.glaydson.controleacademico.domain.repository.CursoRepository; // Importar CursoRepository
+import com.glaydson.controleacademico.rest.dto.AlunoRequestDTO;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional; // Importante para operações de escrita
 import jakarta.ws.rs.NotFoundException; // Para lançar exceções quando um recurso não é encontrado
 import jakarta.ws.rs.BadRequestException; // Para erros de requisição inválida
@@ -44,57 +44,59 @@ public class AlunoService {
 
     /**
      * Cria um novo aluno.
-     * @param aluno O objeto Aluno a ser criado. O ID deve ser nulo.
+     * @param alunoDto O objeto Aluno a ser criado. O ID deve ser nulo.
      * @return O Aluno persistido com o ID gerado.
      * @throws BadRequestException Se o curso associado não for encontrado.
      */
-    @Transactional // Marca o método para ser executado dentro de uma transação de banco de dados
-    public Aluno criarAluno(Aluno aluno) {
-        if (aluno.getId() != null) {
-            throw new BadRequestException("ID deve ser nulo para criar um novo aluno.");
-        }
-        // Validação adicional: Garantir que o curso existe
-        if (aluno.getCurso() == null || aluno.getCurso().id == null) {
-            throw new BadRequestException("Um aluno deve estar associado a um curso válido.");
+    @Transactional
+    public Aluno criarAluno(AlunoRequestDTO alunoDto) { // <-- Recebe o DTO
+        if (alunoRepository.find("matricula", alunoDto.matricula).count() > 0) {
+            throw new BadRequestException("Já existe um aluno com a matrícula " + alunoDto.matricula);
         }
 
-        Curso cursoExistente = cursoRepository.findByIdOptional(aluno.getCurso().id)
-                .orElseThrow(() -> new NotFoundException("Curso com ID " + aluno.getCurso().id + " não encontrado."));
-        aluno.setCurso(cursoExistente); // Associa a instância gerenciada do Curso
+        Curso cursoExistente = cursoRepository.findByIdOptional(alunoDto.cursoId) // <-- Usa cursoId do DTO
+                .orElseThrow(() -> new NotFoundException("Curso com ID " + alunoDto.cursoId + " não encontrado."));
 
-        alunoRepository.persist(aluno); // Persiste o aluno no banco de dados
+        Aluno aluno = new Aluno(); // Cria uma nova instância da entidade
+        aluno.nome = alunoDto.nome; // Atribui os campos do DTO à entidade
+        aluno.matricula = alunoDto.matricula;
+        aluno.curso = cursoExistente; // Associa a instância gerenciada do Curso
+
+        alunoRepository.persist(aluno);
         return aluno;
     }
 
     /**
      * Atualiza um aluno existente.
      * @param id O ID do aluno a ser atualizado.
-     * @param alunoAtualizado O objeto Aluno com os dados atualizados.
+     * @param alunoDto O objeto Aluno com os dados atualizados.
      * @return O Aluno atualizado.
      * @throws NotFoundException Se o aluno com o ID especificado não for encontrado.
      * @throws BadRequestException Se o curso associado não for encontrado.
      */
     @Transactional
-    public Aluno atualizarAluno(Long id, Aluno alunoAtualizado) {
+    public Aluno atualizarAluno(Long id, AlunoRequestDTO alunoDto) { // Assumindo AlunoUpdateDTO
         Aluno alunoExistente = alunoRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Aluno com ID " + id + " não encontrado."));
 
-        // Atualiza os campos do aluno existente com os dados do alunoAtualizado
-        alunoExistente.setNome(alunoAtualizado.getNome());
-        alunoExistente.setMatricula(alunoAtualizado.getMatricula());
-
-        // Atualiza o curso se for fornecido um novo curso ID
-        if (alunoAtualizado.getCurso() != null && alunoAtualizado.getCurso().id != null) {
-            Curso novoCurso = cursoRepository.findByIdOptional(alunoAtualizado.getCurso().id)
-                    .orElseThrow(() -> new NotFoundException("Curso com ID " + alunoAtualizado.getCurso().id + " não encontrado."));
-            alunoExistente.setCurso(novoCurso);
-        } else if (alunoAtualizado.getCurso() == null) {
-            // Lógica para lidar com a remoção de um curso, se permitido, ou erro se for obrigatório
-            throw new BadRequestException("Um aluno deve estar associado a um curso válido.");
+        // Validação de unicidade da matrícula (se for alterada)
+        if (!alunoExistente.matricula.equals(alunoDto.matricula) &&
+                alunoRepository.find("matricula", alunoDto.matricula).count() > 0) {
+            throw new BadRequestException("Já existe outro aluno com a matrícula " + alunoDto.matricula);
         }
 
-        // Panache automaticamente persiste as alterações em entidades gerenciadas dentro de uma transação.
-        // alunoRepository.persist(alunoExistente); // Esta linha é opcional, pois as alterações já são rastreadas
+        alunoExistente.nome = alunoDto.nome;
+        alunoExistente.matricula = alunoDto.matricula;
+
+        if (alunoDto.cursoId != null) { // Permite atualizar o curso
+            Curso novoCurso = cursoRepository.findByIdOptional(alunoDto.cursoId)
+                    .orElseThrow(() -> new NotFoundException("Curso com ID " + alunoDto.cursoId + " não encontrado."));
+            alunoExistente.curso = novoCurso;
+        } else {
+            // Se o cursoId for nulo no DTO, o que fazer? Lançar erro? Deixar como está?
+            // Como regra, mantém-se o curso como obrigatório.
+            throw new BadRequestException("O ID do curso é obrigatório para atualização.");
+        }
         return alunoExistente;
     }
 

@@ -1,15 +1,19 @@
 package com.glaydson.controleacademico.rest;
 
 import com.glaydson.controleacademico.domain.model.Curso;
+import com.glaydson.controleacademico.rest.dto.CursoRequestDTO;
+import com.glaydson.controleacademico.rest.dto.CursoResponseDTO;
 import com.glaydson.controleacademico.service.CursoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/cursos")
 @ApplicationScoped
@@ -24,49 +28,56 @@ public class CursoResource {
     }
 
     @GET
-    @RolesAllowed({"ADMIN", "COORDENADOR", "ALUNO", "PROFESSOR"}) // Todos podem ver os cursos
-    public List<Curso> listarTodosCursos() {
-        return cursoService.listarTodosCursos();
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"}) // Everyone can view courses
+    public List<CursoResponseDTO> listarTodosCursos() { // Returns List of DTOs
+        return cursoService.listarTodosCursos().stream()
+                .map(CursoResponseDTO::new) // Convert entity to DTO
+                .collect(Collectors.toList());
     }
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "COORDENADOR", "ALUNO", "PROFESSOR"})
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"})
     public Response buscarCursoPorId(@PathParam("id") Long id) {
         return cursoService.buscarCursoPorId(id)
-                .map(curso -> Response.ok(curso).build())
+                .map(curso -> Response.ok(new CursoResponseDTO(curso)).build()) // Convert entity to DTO
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @GET
     @Path("/codigo/{codigo}")
-    @RolesAllowed({"ADMIN", "COORDENADOR", "ALUNO", "PROFESSOR"})
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"})
     public Response buscarCursoPorCodigo(@PathParam("codigo") String codigo) {
         return cursoService.buscarCursoPorCodigo(codigo)
-                .map(curso -> Response.ok(curso).build())
+                .map(curso -> Response.ok(new CursoResponseDTO(curso)).build()) // Convert entity to DTO
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @POST
-    @RolesAllowed({"ADMIN", "COORDENADOR"}) // Admin e Coordenador podem criar cursos
-    public Response criarCurso(Curso curso) {
+    @RolesAllowed({"COORDENADOR"})
+    public Response criarCurso(@Valid CursoRequestDTO cursoDto) { // Receives DTO for creation
         try {
-            Curso novoCurso = cursoService.criarCurso(curso);
-            return Response.created(UriBuilder.fromResource(CursoResource.class).path(novoCurso.id.toString()).build())
-                    .entity(novoCurso)
+            Curso novoCurso = cursoService.criarCurso(cursoDto); // Service now takes DTO
+            CursoResponseDTO responseDto = new CursoResponseDTO(novoCurso); // Convert persisted entity to DTO
+            return Response.created(UriBuilder.fromResource(CursoResource.class).path(responseDto.id.toString()).build())
+                    .entity(responseDto) // Return DTO
                     .build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (NotFoundException e) { // Catch NotFoundException for associated entities (e.g., Disciplinas, Coordenador)
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         }
     }
 
+
     @PUT
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "COORDENADOR"}) // Admin e Coordenador podem atualizar cursos
-    public Response atualizarCurso(@PathParam("id") Long id, Curso cursoAtualizado) {
+    @RolesAllowed({"COORDENADOR"})
+    public Response atualizarCurso(@PathParam("id") Long id, @Valid CursoRequestDTO cursoDto) { // Receives DTO for update
         try {
-            Curso curso = cursoService.atualizarCurso(id, cursoAtualizado);
-            return Response.ok(curso).build();
+            Curso curso = cursoService.atualizarCurso(id, cursoDto); // Service now takes DTO
+            CursoResponseDTO responseDto = new CursoResponseDTO(curso); // Convert updated entity to DTO
+            return Response.ok(responseDto).build(); // Return DTO
         } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (BadRequestException e) {
@@ -76,7 +87,7 @@ public class CursoResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("ADMIN") // Apenas administradores podem deletar cursos
+    @RolesAllowed("COORDENADOR") // Apenas administradores podem deletar cursos
     public Response deletarCurso(@PathParam("id") Long id) {
         boolean deletado = cursoService.deletarCurso(id);
         if (deletado) {

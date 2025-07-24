@@ -4,22 +4,31 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED) // Estratégia de herança: JOINED
-@DiscriminatorColumn(name = "tipo_pessoa", discriminatorType = DiscriminatorType.STRING)
+@Table(name = "pessoa", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"matricula"}) // Matrícula deve ser única para todas as Pessoas
+})
+@Inheritance(strategy = InheritanceType.JOINED) // Estratégia de herança JOINED
+@DiscriminatorColumn(name = "tipo_pessoa", discriminatorType = DiscriminatorType.STRING) // Coluna para identificar o tipo
+@SequenceGenerator(name = "pessoa_seq", sequenceName = "pessoa_seq", allocationSize = 1)
 public abstract class Pessoa extends PanacheEntityBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pessoa_seq")
     public Long id;
 
     @Column(nullable = false)
     public String nome;
 
+    @Column(nullable = false, unique = true)
+    public String matricula;
+
+
     // Construtores, getters e setters
     public Pessoa() {}
 
-    public Pessoa(String nome) {
+    public Pessoa(String nome, String matricula) {
         this.nome = nome;
+        this.matricula = matricula;
     }
 
     // Getters e Setters
@@ -37,5 +46,13 @@ public abstract class Pessoa extends PanacheEntityBase {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public String getMatricula() {
+        return matricula;
+    }
+
+    public void setMatricula(String matricula) {
+        this.matricula = matricula;
     }
 }

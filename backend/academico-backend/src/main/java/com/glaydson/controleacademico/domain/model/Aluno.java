@@ -3,11 +3,9 @@ package com.glaydson.controleacademico.domain.model;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "aluno") // Nome da tabela no banco de dados
 @DiscriminatorValue("ALUNO") // Valor para a coluna 'tipo_pessoa' na tabela Pessoa
 public class Aluno extends Pessoa {
-
-    @Column(nullable = false, unique = true)
-    public String matricula;
 
     @ManyToOne
     @JoinColumn(name = "curso_id", nullable = false) // Chave estrangeira para Curso
@@ -16,18 +14,8 @@ public class Aluno extends Pessoa {
     public Aluno() {}
 
     public Aluno(String nome, String matricula, Curso curso) {
-        super(nome);
-        this.matricula = matricula;
+        super(nome, matricula);
         this.curso = curso;
-    }
-
-    // Getters e Setters
-    public String getMatricula() {
-        return matricula;
-    }
-
-    public void setMatricula(String matricula) {
-        this.matricula = matricula;
     }
 
     public Curso getCurso() {

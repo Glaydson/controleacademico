@@ -3,7 +3,6 @@ package com.glaydson.controleacademico.service;
 import com.glaydson.controleacademico.domain.model.Professor;
 import com.glaydson.controleacademico.domain.repository.ProfessorRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -38,8 +37,8 @@ public class ProfessorService {
             throw new BadRequestException("ID deve ser nulo para criar um novo professor.");
         }
         // Exemplo de validação de negócio: garantir que o registro seja único
-        if (professorRepository.find("registro", professor.getRegistro()).count() > 0) {
-            throw new BadRequestException("Já existe um professor com o registro " + professor.getRegistro());
+        if (professorRepository.find("matricula", professor.getMatricula()).count() > 0) {
+            throw new BadRequestException("Já existe um professor com a matricula " + professor.getMatricula());
         }
         professorRepository.persist(professor);
         return professor;
@@ -52,7 +51,7 @@ public class ProfessorService {
 
         // Atualiza os campos
         professorExistente.setNome(professorAtualizado.getNome());
-        professorExistente.setRegistro(professorAtualizado.getRegistro());
+        professorExistente.setMatricula(professorAtualizado.getMatricula());
 
         // O Panache detecta as alterações e as persiste na transação
         return professorExistente;

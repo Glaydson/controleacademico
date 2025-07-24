@@ -1,16 +1,19 @@
 package com.glaydson.controleacademico.rest;
 
 import com.glaydson.controleacademico.domain.model.Disciplina;
+import com.glaydson.controleacademico.rest.dto.DisciplinaRequestDTO;
+import com.glaydson.controleacademico.rest.dto.DisciplinaResponseDTO;
 import com.glaydson.controleacademico.service.DisciplinaService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/disciplinas")
 @ApplicationScoped
@@ -25,51 +28,55 @@ public class DisciplinaResource {
     }
 
     @GET
-    @RolesAllowed({"ADMIN", "COORDENADOR", "PROFESSOR", "ALUNO"}) // Todos podem ver as disciplinas
-    public List<Disciplina> listarTodasDisciplinas() {
-        return disciplinaService.listarTodasDisciplinas();
+    @RolesAllowed({ "COORDENADOR", "PROFESSOR", "ALUNO"}) // Everyone can view disciplines
+    public List<DisciplinaResponseDTO> listarTodasDisciplinas() { // Returns List of DTOs
+        return disciplinaService.listarTodasDisciplinas().stream()
+                .map(DisciplinaResponseDTO::new) // Convert entity to DTO
+                .collect(Collectors.toList());
     }
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "COORDENADOR", "PROFESSOR", "ALUNO"})
+    @RolesAllowed({ "COORDENADOR", "PROFESSOR", "ALUNO"})
     public Response buscarDisciplinaPorId(@PathParam("id") Long id) {
         return disciplinaService.buscarDisciplinaPorId(id)
-                .map(disciplina -> Response.ok(disciplina).build())
+                .map(disciplina -> Response.ok(new DisciplinaResponseDTO(disciplina)).build()) // Convert entity to DTO
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @GET
     @Path("/codigo/{codigo}")
-    @RolesAllowed({"ADMIN", "COORDENADOR", "PROFESSOR", "ALUNO"})
+    @RolesAllowed({ "COORDENADOR", "PROFESSOR", "ALUNO"})
     public Response buscarDisciplinaPorCodigo(@PathParam("codigo") String codigo) {
         return disciplinaService.buscarDisciplinaPorCodigo(codigo)
-                .map(disciplina -> Response.ok(disciplina).build())
+                .map(disciplina -> Response.ok(new DisciplinaResponseDTO(disciplina)).build()) // Convert entity to DTO
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @POST
-    @RolesAllowed({"ADMIN", "COORDENADOR"}) // Admin e Coordenador podem criar disciplinas
-    public Response criarDisciplina(Disciplina disciplina) {
+    @RolesAllowed({ "COORDENADOR"}) // Coordinators can create disciplines
+    public Response criarDisciplina(@Valid DisciplinaRequestDTO disciplinaDto) { // Receives DTO for creation
         try {
-            Disciplina novaDisciplina = disciplinaService.criarDisciplina(disciplina);
-            return Response.created(UriBuilder.fromResource(DisciplinaResource.class).path(novaDisciplina.id.toString()).build())
-                    .entity(novaDisciplina)
+            Disciplina novaDisciplina = disciplinaService.criarDisciplina(disciplinaDto); // Service now takes DTO
+            DisciplinaResponseDTO responseDto = new DisciplinaResponseDTO(novaDisciplina); // Convert persisted entity to DTO
+            return Response.created(UriBuilder.fromResource(DisciplinaResource.class).path(responseDto.id.toString()).build())
+                    .entity(responseDto) // Return DTO
                     .build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NotFoundException e) {
+        } catch (NotFoundException e) { // Catch NotFoundException for associated entities (e.g., Cursos)
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         }
     }
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "COORDENADOR"}) // Admin e Coordenador podem atualizar disciplinas
-    public Response atualizarDisciplina(@PathParam("id") Long id, Disciplina disciplinaAtualizada) {
+    @RolesAllowed({ "COORDENADOR"}) // Coordinators can update disciplines
+    public Response atualizarDisciplina(@PathParam("id") Long id, @Valid DisciplinaRequestDTO disciplinaDto) { // Receives DTO for update
         try {
-            Disciplina disciplina = disciplinaService.atualizarDisciplina(id, disciplinaAtualizada);
-            return Response.ok(disciplina).build();
+            Disciplina disciplina = disciplinaService.atualizarDisciplina(id, disciplinaDto); // Service now takes DTO
+            DisciplinaResponseDTO responseDto = new DisciplinaResponseDTO(disciplina); // Convert updated entity to DTO
+            return Response.ok(responseDto).build(); // Return DTO
         } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (BadRequestException e) {
@@ -79,7 +86,7 @@ public class DisciplinaResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("ADMIN") // Apenas administradores podem deletar disciplinas
+    @RolesAllowed("COORDENADOR")
     public Response deletarDisciplina(@PathParam("id") Long id) {
         boolean deletado = disciplinaService.deletarDisciplina(id);
         if (deletado) {

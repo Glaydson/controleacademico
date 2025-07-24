@@ -1,9 +1,11 @@
 package com.glaydson.controleacademico.rest;
 
 import com.glaydson.controleacademico.domain.model.Aluno;
+import com.glaydson.controleacademico.rest.dto.AlunoRequestDTO;
 import com.glaydson.controleacademico.service.AlunoService;
 import jakarta.annotation.security.RolesAllowed; // Para proteção de roles
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*; // Importa todas as anotações JAX-RS
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -71,17 +73,16 @@ public class AlunoResource {
      * Endpoint para criar um novo aluno.
      * Apenas usuários com a role ADMIN podem criar alunos.
      *
-     * @param aluno O objeto Aluno a ser criado, enviado no corpo da requisição.
+     * @param alunoDto O objeto Aluno a ser criado, enviado no corpo da requisição.
      * @return 201 Created com a localização do novo recurso ou 400 Bad Request se inválido.
      */
     @POST
     @RolesAllowed("ADMIN")
-    public Response criarAluno(Aluno aluno) {
+    public Response criarAluno(@Valid AlunoRequestDTO alunoDto) { // <-- Recebe o DTO e valida com @Valid
         try {
-            Aluno novoAluno = alunoService.criarAluno(aluno);
-            // Retorna 201 Created com a URI do novo recurso
-            return Response.created(UriBuilder.fromResource(AlunoResource.class).path(novoAluno.getId().toString()).build())
-                    .entity(novoAluno) // Opcional: retornar o objeto criado no corpo
+            Aluno novoAluno = alunoService.criarAluno(alunoDto); // Passa o DTO para o service
+            return Response.created(UriBuilder.fromResource(AlunoResource.class).path(novoAluno.id.toString()).build())
+                    .entity(novoAluno)
                     .build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -95,15 +96,15 @@ public class AlunoResource {
      * Apenas usuários com a role ADMIN podem atualizar alunos.
      *
      * @param id O ID do aluno a ser atualizado.
-     * @param alunoAtualizado O objeto Aluno com os dados atualizados.
+     * @param alunoDto O objeto Aluno com os dados atualizados.
      * @return 200 OK com o aluno atualizado ou 404 Not Found.
      */
     @PUT
     @Path("/{id}")
     @RolesAllowed("ADMIN")
-    public Response atualizarAluno(@PathParam("id") Long id, Aluno alunoAtualizado) {
+    public Response atualizarAluno(@PathParam("id") Long id, @Valid AlunoRequestDTO alunoDto) { // <-- Recebe o DTO e valida
         try {
-            Aluno aluno = alunoService.atualizarAluno(id, alunoAtualizado);
+            Aluno aluno = alunoService.atualizarAluno(id, alunoDto); // Passa o DTO para o service
             return Response.ok(aluno).build();
         } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();

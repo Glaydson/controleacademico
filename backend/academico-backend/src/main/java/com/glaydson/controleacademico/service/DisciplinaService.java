@@ -4,8 +4,8 @@ import com.glaydson.controleacademico.domain.model.Curso;
 import com.glaydson.controleacademico.domain.model.Disciplina;
 import com.glaydson.controleacademico.domain.repository.CursoRepository;
 import com.glaydson.controleacademico.domain.repository.DisciplinaRepository;
+import com.glaydson.controleacademico.rest.dto.DisciplinaRequestDTO;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -41,73 +41,94 @@ public class DisciplinaService {
     }
 
     @Transactional
-    public Disciplina criarDisciplina(Disciplina disciplina) {
-        if (disciplina.id != null) {
-            throw new BadRequestException("ID deve ser nulo para criar uma nova disciplina.");
+    public Disciplina criarDisciplina(DisciplinaRequestDTO disciplinaDto) { // Receives DTO
+        if (disciplinaRepository.find("codigo", disciplinaDto.getCodigo()).count() > 0) {
+            throw new BadRequestException("Já existe uma disciplina com o código " + disciplinaDto.getCodigo());
         }
-        if (disciplinaRepository.find("codigo", disciplina.getCodigo()).count() > 0) {
-            throw new BadRequestException("Já existe uma disciplina com o código " + disciplina.getCodigo());
-        }
-        if (disciplinaRepository.find("nome", disciplina.getNome()).count() > 0) {
-            throw new BadRequestException("Já existe uma disciplina com o nome " + disciplina.getNome());
+        if (disciplinaRepository.find("nome", disciplinaDto.getNome()).count() > 0) {
+            throw new BadRequestException("Já existe uma disciplina com o nome " + disciplinaDto.getNome());
         }
 
-        // Valida e associa cursos
-        Set<Curso> cursosGerenciados = new HashSet<>();
-        if (disciplina.getCursos() != null && !disciplina.getCursos().isEmpty()) {
-            for (Curso curso : disciplina.getCursos()) {
-                if (curso.id == null) {
-                    throw new BadRequestException("IDs de curso devem ser fornecidos para associar uma disciplina.");
-                }
-                Curso cursoExistente = cursoRepository.findByIdOptional(curso.id)
-                        .orElseThrow(() -> new NotFoundException("Curso com ID " + curso.id + " não encontrado."));
-                cursosGerenciados.add(cursoExistente);
+        Disciplina disciplina = new Disciplina();
+        disciplina.setNome(disciplinaDto.getNome());
+        disciplina.setCodigo(disciplinaDto.getCodigo());
+
+        // Validate and associate courses
+        Set<Curso> cursosParaAssociar = new HashSet<>();
+        if (disciplinaDto.getCursoIds() != null && !disciplinaDto.getCursoIds().isEmpty()) {
+            for (Long cursoId : disciplinaDto.getCursoIds()) {
+                Curso cursoExistente = cursoRepository.findByIdOptional(cursoId)
+                        .orElseThrow(() -> new NotFoundException("Curso com ID " + cursoId + " não encontrado."));
+                cursosParaAssociar.add(cursoExistente);
             }
         }
-        disciplina.setCursos(cursosGerenciados); // Associa os cursos gerenciados
+        // Ensure bidirectional relationship is set
+        for (Curso curso : cursosParaAssociar) {
+            disciplina.addCurso(curso);
+        }
 
         disciplinaRepository.persist(disciplina);
         return disciplina;
     }
 
     @Transactional
-    public Disciplina atualizarDisciplina(Long id, Disciplina disciplinaAtualizada) {
+    public Disciplina atualizarDisciplina(Long id, DisciplinaRequestDTO disciplinaDto) { // Receives DTO
         Disciplina disciplinaExistente = disciplinaRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Disciplina com ID " + id + " não encontrada."));
 
-        // Validação de unicidade
-        if (!disciplinaExistente.getCodigo().equals(disciplinaAtualizada.getCodigo()) &&
-                disciplinaRepository.find("codigo", disciplinaAtualizada.getCodigo()).count() > 0) {
-            throw new BadRequestException("Já existe outra disciplina com o código " + disciplinaAtualizada.getCodigo());
+        // Validate uniqueness
+        if (!disciplinaExistente.getCodigo().equals(disciplinaDto.getCodigo()) &&
+                disciplinaRepository.find("codigo = ?1 and id <> ?2", disciplinaDto.getCodigo(), id).count() > 0) {
+            throw new BadRequestException("Já existe outra disciplina com o código " + disciplinaDto.getCodigo());
         }
-        if (!disciplinaExistente.getNome().equals(disciplinaAtualizada.getNome()) &&
-                disciplinaRepository.find("nome", disciplinaAtualizada.getNome()).count() > 0) {
-            throw new BadRequestException("Já existe outra disciplina com o nome " + disciplinaAtualizada.getNome());
+        if (!disciplinaExistente.getNome().equals(disciplinaDto.getNome()) &&
+                disciplinaRepository.find("nome = ?1 and id <> ?2", disciplinaDto.getNome(), id).count() > 0) {
+            throw new BadRequestException("Já existe outra disciplina com o nome " + disciplinaDto.getNome());
         }
 
-        disciplinaExistente.setNome(disciplinaAtualizada.getNome());
-        disciplinaExistente.setCodigo(disciplinaAtualizada.getCodigo());
+        disciplinaExistente.setNome(disciplinaDto.getNome());
+        disciplinaExistente.setCodigo(disciplinaDto.getCodigo());
 
-        // Atualiza a lista de cursos associados
-        Set<Curso> cursosAtualizados = new HashSet<>();
-        if (disciplinaAtualizada.getCursos() != null && !disciplinaAtualizada.getCursos().isEmpty()) {
-            for (Curso curso : disciplinaAtualizada.getCursos()) {
-                if (curso.id == null) {
-                    throw new BadRequestException("IDs de curso devem ser fornecidos para associar uma disciplina.");
-                }
-                Curso cursoExistente = cursoRepository.findByIdOptional(curso.id)
-                        .orElseThrow(() -> new NotFoundException("Curso com ID " + curso.id + " não encontrado."));
-                cursosAtualizados.add(cursoExistente);
+        // Update the list of associated courses
+        Set<Curso> cursosAtuais = new HashSet<>(disciplinaExistente.getCursos());
+        Set<Curso> novosCursos = new HashSet<>();
+
+        if (disciplinaDto.getCursoIds() != null && !disciplinaDto.getCursoIds().isEmpty()) {
+            for (Long cursoId : disciplinaDto.getCursoIds()) {
+                Curso curso = cursoRepository.findByIdOptional(cursoId)
+                        .orElseThrow(() -> new NotFoundException("Curso com ID " + cursoId + " não encontrado."));
+                novosCursos.add(curso);
             }
         }
-        disciplinaExistente.setCursos(cursosAtualizados); // Atualiza a coleção
+
+        // Remove old associations
+        for (Curso cursoAntigo : cursosAtuais) {
+            if (!novosCursos.contains(cursoAntigo)) {
+                disciplinaExistente.removeCurso(cursoAntigo);
+            }
+        }
+
+        // Add new associations
+        for (Curso novoCurso : novosCursos) {
+            if (!cursosAtuais.contains(novoCurso)) {
+                disciplinaExistente.addCurso(novoCurso);
+            }
+        }
 
         return disciplinaExistente;
     }
 
     @Transactional
     public boolean deletarDisciplina(Long id) {
-        // Adicione lógica para verificar se a disciplina está em uso (ex: em Matrizes Curriculares)
+        Disciplina disciplina = disciplinaRepository.findByIdOptional(id)
+                .orElseThrow(() -> new NotFoundException("Disciplina com ID " + id + " não encontrada."));
+
+        // Remove Many-to-Many associations before deleting
+        for (Curso curso : new HashSet<>(disciplina.getCursos())) { // Use a copy
+            curso.removeDisciplina(disciplina);
+        }
+        disciplina.getCursos().clear(); // Clear the set on the Disciplina side
+
         return disciplinaRepository.deleteById(id);
     }
 }
