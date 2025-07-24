@@ -1,5 +1,5 @@
-# controle-academico/docker-compose.yml
 services:
+  # Keycloak services (existing)
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.1
     container_name: keycloak
@@ -10,7 +10,7 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
-      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME: http://localhost:8080 # This hostname is for external access to Keycloak
       KC_HTTP_ENABLED: 'true'
       KC_FEATURES: 'token-exchange,admin-fine-grained-authz'
     ports:
@@ -19,8 +19,10 @@ services:
       - keycloak-db
     networks:
       - app-network
-    command: 
-      - start-dev 
+    command:
+      - start-dev
+    healthcheck: # Adicione healthcheck para o Keycloak também!
+      disable: true # Desabilitado por padrão, mas você pode habilitar se quiser
 
   keycloak-db:
     image: postgres:17
@@ -33,9 +35,74 @@ services:
       - keycloak_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck: # Healthcheck para o PostgreSQL
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"] # Verifica se o DB está pronto
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Banco de Dados para o Backend (Novo serviço)
+  backend-db:
+    image: postgres:16.1-alpine # Versão estável e leve do Postgres
+    container_name: controle_academico_backend_db
+    environment:
+      POSTGRES_DB: academico_db       # Nome do banco de dados do backend
+      POSTGRES_USER: academico_user   # Usuário do backend
+      POSTGRES_PASSWORD: academico_pass # Senha do backend
+    volumes:
+      - backend_db_data:/var/lib/postgresql/data # Volume persistente para os dados do backend
+    networks:
+      - app-network
+    healthcheck: # Healthcheck para o PostgreSQL
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"] # Verifica se o DB está pronto
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend Quarkus
+  backend:
+    build:
+      context: ./backend/academico-backend # O caminho para a pasta raiz do seu projeto backend (onde está o pom.xml)
+      dockerfile: src/main/docker/Dockerfile.jvm # Caminho para o Dockerfile dentro da pasta backend
+    container_name: controle_academico_backend
+    ports:
+      - "8081:8081" # Mapeia a porta interna (8081) para a porta externa (8081)
+    environment:
+      # Sobrescrever as propriedades do application.properties para o ambiente Docker
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://backend-db:5432/academico_db
+      QUARKUS_DATASOURCE_USERNAME: academico_user
+      QUARKUS_DATASOURCE_PASSWORD: academico_pass
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/controle-academico
+      QUARKUS_HTTP_CORS_ORIGINS: http://frontend:4200,http://localhost:4200 # Permitir acesso do frontend na rede docker e local
+    depends_on:
+      keycloak: # Depende do Keycloak para autenticação
+        condition: service_started # Espera o Keycloak estar healthy (opcional, requer healthcheck no keycloak)
+      backend-db: # Depende do DB do backend
+        condition: service_healthy # Espera o DB estar healthy (opcional, requer healthcheck no DB)
+    networks:
+      - app-network
+    healthcheck: # Healthcheck para o backend Quarkus
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/q/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend Angular
+  frontend:
+    build:
+      context: ./frontend # O caminho para a pasta raiz do seu projeto frontend Angular
+      dockerfile: Dockerfile # O Dockerfile do frontend geralmente fica na raiz do projeto frontend
+    container_name: controle_academico_frontend
+    ports:
+      - "4200:4200" # Mapeia a porta do container (4200) para a porta da sua máquina (4200)
+    depends_on:
+      - backend # Depende do backend para comunicação
+    networks:
+      - app-network
 
 volumes:
   keycloak_data:
+  backend_db_data: # Novo volume para os dados do banco de dados do backend
 
 networks:
   app-network:
