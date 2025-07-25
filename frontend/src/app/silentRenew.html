@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Silent Renew</title>
+  </head>
+  <body>
+    <script>
+      window.onload = function() {
+        if (window.parent) {
+          window.parent.postMessage(window.location.hash, window.location.origin);
+        }
+      };
+    </script>
+  </body>
+</html>

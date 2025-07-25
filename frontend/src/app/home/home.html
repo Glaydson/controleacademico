@@ -1,0 +1,12 @@
+<section>
+  <h2>Bem-vindo ao Controle Acadêmico Web!</h2>
+
+  <div *ngIf="userData">
+    <p>Olá, {{ userData.preferred_username || userData.name }}!</p>
+    <h3>Seus dados de usuário:</h3>
+    <pre>{{ userData | json }}</pre>
+  </div>
+  <div *ngIf="!userData">
+    <p>Carregando dados do usuário...</p>
+  </div>
+</section>

@@ -21,6 +21,8 @@ services:
       - app-network
     command:
       - start-dev
+    volumes:
+      - keycloak_app_data:/opt/keycloak/data
     healthcheck: # Adicione healthcheck para o Keycloak também!
       disable: true # Desabilitado por padrão, mas você pode habilitar se quiser
 
@@ -32,7 +34,7 @@ services:
       POSTGRES_USER: keycloak_user
       POSTGRES_PASSWORD: keycloak_password
     volumes:
-      - keycloak_data:/var/lib/postgresql/data
+      - keycloak_db_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck: # Healthcheck para o PostgreSQL
@@ -94,15 +96,16 @@ services:
       dockerfile: Dockerfile # O Dockerfile do frontend geralmente fica na raiz do projeto frontend
     container_name: controle_academico_frontend
     ports:
-      - "4200:4200" # Mapeia a porta do container (4200) para a porta da sua máquina (4200)
+      - "4200:80" # Mapeia a porta do container (4200) para a porta da sua máquina (4200)
     depends_on:
       - backend # Depende do backend para comunicação
     networks:
       - app-network
 
 volumes:
-  keycloak_data:
-  backend_db_data: # Novo volume para os dados do banco de dados do backend
+  keycloak_app_data:
+  keycloak_db_data:
+  backend_db_data: 
 
 networks:
   app-network:

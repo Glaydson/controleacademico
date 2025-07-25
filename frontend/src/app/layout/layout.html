@@ -1,0 +1,36 @@
+<header>
+  <h1>Controle Acadêmico Web</h1>
+  <nav>
+    <ul>
+      <li><a routerLink="/home" routerLinkActive="active">Início</a></li>
+
+      <li *ngIf="hasRole('admin')">
+        <a routerLink="/gerenciar-usuarios" routerLinkActive="active">Gerenciar Usuários</a>
+      </li>
+
+      <li *ngIf="hasRole('coordenador')">
+        <a routerLink="/gerenciar-pedagogico" routerLinkActive="active">Gerenciar Pedagógico</a>
+      </li>
+
+      <li *ngIf="hasRole('coordenador')">
+        <a routerLink="/montar-matriz" routerLinkActive="active">Montar Matriz Curricular</a>
+      </li>
+
+      <li *ngIf="hasAnyRole(['coordenador', 'professor', 'aluno'])">
+        <a routerLink="/visualizar-matriz" routerLinkActive="active">Visualizar Matriz Curricular</a>
+      </li>
+      </ul>
+  </nav>
+  <div class="user-info">
+    <span *ngIf="userName">Olá, {{ userName }}!</span>
+    <button (click)="logout()">Logout</button>
+  </div>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer>
+  <p>&copy; 2025 Controle Acadêmico</p>
+</footer>
