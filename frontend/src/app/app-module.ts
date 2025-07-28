@@ -1,44 +1,66 @@
 // src/app/app.module.ts
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { AuthModule, LogLevel } from 'angular-auth-oidc-client';
-import { CommonModule } from '@angular/common'; // Já está aqui
+import { AuthModule } from 'angular-auth-oidc-client';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { environment } from '../environments/environment';
-import { AppRoutingModule } from './app-routing.module'; // Já está aqui
+import { AppRoutingModule } from './app-routing.module';
 
-// Importe os componentes standalone que serão usados diretamente no AppModule
-import { AppComponent } from './app'; // Importe o AppComponent standalone
-import { AuthCheckerGuard } from './guards/auth-checker.guard'; // Seu novo AuthCheckerGuard
-import { RoleGuard } from './guards/role.guard'; // Seu RoleGuard
+// HTTP - Abordagem clássica que ainda funciona
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
-// Importe os outros componentes que são declarados no AppModule, se não forem standalone
-import { GerenciarUsuariosComponent } from './gerenciar-usuarios/gerenciar-usuarios'; // Renomeei para GerenciarUsuariosComponent
-import { GerenciarPedagogicoComponent } from './gerenciar-pedagogico/gerenciar-pedagogico'; // Renomeei
-import { MontarMatrizComponent } from './montar-matriz/montar-matriz'; // Renomeei
-import { VisualizarMatrizComponent } from './visualizar-matriz/visualizar-matriz'; // Renomeei
+// Guards
+import { AuthCheckerGuard } from './guards/auth-checker.guard';
+import { RoleGuard } from './guards/role.guard';
+
+// Interceptor clássico
+import { AuthInterceptor } from './interceptors/auth.interceptor';
+
+// Componentes
+import { AppComponent } from './app';
+import { GerenciarUsuariosComponent } from './gerenciar-usuarios/gerenciar-usuarios';
+import { GerenciarPedagogicoComponent } from './gerenciar-pedagogico/gerenciar-pedagogico';
+import { MontarMatrizComponent } from './montar-matriz/montar-matriz';
+import { VisualizarMatrizComponent } from './visualizar-matriz/visualizar-matriz';
+import { CursosComponent } from './cursos/cursos';
+import { HomeComponent } from './home/home';
+import { LayoutComponent } from './layout/layout';
 
 @NgModule({
-   imports: [
+  imports: [
     BrowserModule,
-    CommonModule, // Mantenha para uso geral no módulo
-    AppRoutingModule, // Contém o RouterModule.forRoot
+    CommonModule,
+    AppRoutingModule,
+    HttpClientModule, // Ainda funciona, apenas deprecated
+    FormsModule,
     AuthModule.forRoot({
       config: environment.oidcConfig
-    }),
-    // Se AppComponent for standalone, você o importa aqui:
-    AppComponent // <-- Importe o AppComponent se ele for standalone
+    })
   ],
   providers: [
-    AuthCheckerGuard, // Mantenha os guards nos providers
-    RoleGuard
+    AuthCheckerGuard,
+    RoleGuard,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
   ],
-  // Remova AppComponent, HomeComponent, LayoutComponent das declarações se forem standalone
   declarations: [
-    GerenciarUsuariosComponent, // Mantenha estes se NÃO forem standalone
+    AppComponent,
+    GerenciarUsuariosComponent,
     GerenciarPedagogicoComponent,
     MontarMatrizComponent,
-    VisualizarMatrizComponent
+    VisualizarMatrizComponent,
+    CursosComponent,
+    HomeComponent,
+    LayoutComponent
   ],
-  bootstrap: [AppComponent] // O componente raiz para iniciar a aplicação
+  bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+   constructor() {
+    console.log('🏗️ [APP-MODULE] Interceptor registrado!');
+  }
+ }

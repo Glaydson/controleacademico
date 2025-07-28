@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { OidcSecurityService, UserDataResult } from 'angular-auth-oidc-client';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
-  imports: [CommonModule] 
+  standalone: false
 })
 export class HomeComponent implements OnInit {
   userData: any; // Tipo para os dados do usuário

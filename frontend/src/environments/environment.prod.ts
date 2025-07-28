@@ -15,5 +15,6 @@ const oidcConfig: OpenIdConfiguration = {
 
 export const environment = {
   production: true,
-  oidcConfig: oidcConfig
+  oidcConfig: oidcConfig,
+  apiUrl: 'http://localhost:8081' // Altere para a URL da API em produção
 };

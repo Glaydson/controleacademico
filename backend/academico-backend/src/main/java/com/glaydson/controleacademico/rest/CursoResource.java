@@ -13,7 +13,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Path("/cursos")
 @ApplicationScoped
@@ -32,7 +31,7 @@ public class CursoResource {
     public List<CursoResponseDTO> listarTodosCursos() { // Returns List of DTOs
         return cursoService.listarTodosCursos().stream()
                 .map(CursoResponseDTO::new) // Convert entity to DTO
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GET

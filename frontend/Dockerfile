@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
-RUN npm run build -- --configuration production
+RUN npm run build -- --configuration=development
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine

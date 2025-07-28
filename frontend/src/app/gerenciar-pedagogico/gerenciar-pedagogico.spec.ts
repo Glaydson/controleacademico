@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GerenciarPedagogico } from './gerenciar-pedagogico';
+import { GerenciarPedagogicoComponent } from './gerenciar-pedagogico';
 
 describe('GerenciarPedagogico', () => {
-  let component: GerenciarPedagogico;
-  let fixture: ComponentFixture<GerenciarPedagogico>;
+  let component: GerenciarPedagogicoComponent;
+  let fixture: ComponentFixture<GerenciarPedagogicoComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [GerenciarPedagogico]
+      declarations: [GerenciarPedagogicoComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(GerenciarPedagogico);
+    fixture = TestBed.createComponent(GerenciarPedagogicoComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

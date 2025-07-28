@@ -11,6 +11,12 @@ import { GerenciarPedagogicoComponent } from './gerenciar-pedagogico/gerenciar-p
 import { MontarMatrizComponent } from './montar-matriz/montar-matriz';
 import { VisualizarMatrizComponent } from './visualizar-matriz/visualizar-matriz';
 
+// NOVOS COMPONENTES para o CRUD
+import { CursosComponent } from './cursos/cursos'; // Vamos criar este
+// import { SemestresComponent } from './semestres/semestres.component'; // Futuro
+// import { DisciplinasComponent } from './disciplinas/disciplinas.component'; // Futuro
+
+
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
@@ -29,10 +35,16 @@ const routes: Routes = [
         data: { roles: ['ADMIN'] } // Apenas usuários com a role 'ADMIN'
       },
       {
-        path: 'gerenciar-pedagogico',
+        path: 'gerenciar-pedagogico', // Rota para o HUB da Gestão Pedagógica
         component: GerenciarPedagogicoComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['COORDENADOR'] } // Apenas usuários com a role 'COORDENADOR'
+        data: { roles: ['COORDENADOR'] },
+        children: [ // Rotas filhas do GerenciarPedagogicoComponent
+          { path: '', redirectTo: 'cursos', pathMatch: 'full' }, // Rota padrão para Cursos
+          { path: 'cursos', component: CursosComponent },
+          // { path: 'semestres', component: SemestresComponent }, // Futuro
+          // { path: 'disciplinas', component: DisciplinasComponent }, // Futuro
+        ]
       },
       {
         path: 'montar-matriz',

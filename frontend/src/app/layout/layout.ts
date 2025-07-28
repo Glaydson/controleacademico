@@ -1,16 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { OidcSecurityService, UserDataResult } from 'angular-auth-oidc-client';
-import { Observable, map } from 'rxjs';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-layout',
   templateUrl: './layout.html',
   styleUrls: ['./layout.css'],
-  imports: [CommonModule, RouterModule] 
+  standalone: false 
 })
-export class LayoutComponent implements OnInit {
+export class LayoutComponent  {
   userName: string | undefined;
   userRoles: string[] = [];
 

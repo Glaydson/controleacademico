@@ -1,11 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-gerenciar-pedagogico',
-  standalone: false,
   templateUrl: './gerenciar-pedagogico.html',
-  styleUrl: './gerenciar-pedagogico.css'
+  styleUrls: ['./gerenciar-pedagogico.css'],
+  standalone: false
 })
-export class GerenciarPedagogicoComponent {
+export class GerenciarPedagogicoComponent implements OnInit {
 
+  constructor() { }
+
+  ngOnInit(): void {
+  }
 }

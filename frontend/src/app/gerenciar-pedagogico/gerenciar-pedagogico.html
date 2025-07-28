@@ -1,1 +1,41 @@
-<p>gerenciar-pedagogico works!</p>
+<section>
+  <h2>Gerenciar Pedagógico</h2>
+
+  <nav class="sub-menu">
+    <ul>
+      <li><a routerLink="cursos" routerLinkActive="active">Cursos</a></li>
+      <li><a routerLink="semestres" routerLinkActive="active">Semestres (Em Breve)</a></li>
+      <li><a routerLink="disciplinas" routerLinkActive="active">Disciplinas (Em Breve)</a></li>
+    </ul>
+  </nav>
+
+  <hr>
+
+  <router-outlet></router-outlet>
+</section>
+
+<style>
+  .sub-menu ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex; /* Para menu horizontal */
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  .sub-menu li a {
+    text-decoration: none;
+    color: #333;
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  .sub-menu li a:hover {
+    background-color: #f0f0f0;
+  }
+  .sub-menu li a.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+</style>
