@@ -32,7 +32,7 @@ public class SemestreResource {
     public List<SemestreResponseDTO> listarTodosSemestres() { // Retorna lista de DTOs
         return semestreService.listarTodosSemestres().stream()
                 .map(SemestreResponseDTO::new) // Converte entidade para DTO
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GET

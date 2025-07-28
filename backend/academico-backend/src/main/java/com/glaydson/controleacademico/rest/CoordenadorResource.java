@@ -33,7 +33,7 @@ public class CoordenadorResource {
     public List<CoordenadorResponseDTO> listarTodosCoordenadores() {
         return coordenadorService.listarTodosCoordenadores().stream()
                 .map(CoordenadorResponseDTO::new) // Converte entidade para DTO
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GET

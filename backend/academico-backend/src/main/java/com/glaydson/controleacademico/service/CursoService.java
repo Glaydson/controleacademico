@@ -29,17 +29,14 @@ public class CursoService {
                         CoordenadorRepository coordenadorRepository) {
         this.cursoRepository = cursoRepository;
         this.disciplinaRepository = disciplinaRepository;
+        this.coordenadorRepository = coordenadorRepository;
     }
 
     public List<Curso> listarTodosCursos() {
-        // Fetching entities with their relationships to ensure DTO conversion is complete
-        // For lazy-loaded relationships, you might need to explicitly fetch them here if not using a ViewGraph
-        // E.g., cursoRepository.findAll().list().forEach(curso -> curso.getDisciplinas().size());
         return cursoRepository.listAll();
     }
 
     public Optional<Curso> buscarCursoPorId(Long id) {
-        // Fetching entities with their relationships for complete DTO conversion
         return cursoRepository.findByIdOptional(id);
     }
 

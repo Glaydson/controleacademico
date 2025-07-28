@@ -13,7 +13,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Path("/disciplinas")
 @ApplicationScoped
@@ -31,8 +30,8 @@ public class DisciplinaResource {
     @RolesAllowed({ "COORDENADOR", "PROFESSOR", "ALUNO"})
     public List<DisciplinaResponseDTO> listarTodasDisciplinas() {
         return disciplinaService.listarTodasDisciplinas().stream()
-                .map(DisciplinaResponseDTO::new) // Convert entity to DTO
-                .collect(Collectors.toList());
+                .map(DisciplinaResponseDTO::new)
+                .toList();
     }
 
     @GET

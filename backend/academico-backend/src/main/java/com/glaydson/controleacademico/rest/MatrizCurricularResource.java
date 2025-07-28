@@ -32,7 +32,7 @@ public class MatrizCurricularResource {
     public List<MatrizCurricularResponseDTO> listarTodasMatrizesCurriculares() {
         return matrizCurricularService.listarTodasMatrizesCurriculares().stream()
                 .map(MatrizCurricularResponseDTO::new) // Converte cada entidade para DTO de resposta
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GET
