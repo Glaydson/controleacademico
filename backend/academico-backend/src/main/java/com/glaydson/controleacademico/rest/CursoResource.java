@@ -27,10 +27,10 @@ public class CursoResource {
     }
 
     @GET
-    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"}) // Everyone can view courses
-    public List<CursoResponseDTO> listarTodosCursos() { // Returns List of DTOs
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"})
+    public List<CursoResponseDTO> listarTodosCursos() {
         return cursoService.listarTodosCursos().stream()
-                .map(CursoResponseDTO::new) // Convert entity to DTO
+                .map(CursoResponseDTO::new)
                 .toList();
     }
 

@@ -2,10 +2,9 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home';
 import { LayoutComponent } from './layout/layout';
-import { RoleGuard } from './guards/role.guard'; // Importe o RoleGuard
-import { AuthCheckerGuard } from './guards/auth-checker.guard'; // <-- IMPORTE O NOVO GUARD
+import { RoleGuard } from './guards/role.guard'; 
+import { AuthCheckerGuard } from './guards/auth-checker.guard'; 
 
-// Importe seus novos componentes
 import { GerenciarUsuariosComponent } from './gerenciar-usuarios/gerenciar-usuarios';
 import { GerenciarPedagogicoComponent } from './gerenciar-pedagogico/gerenciar-pedagogico';
 import { MontarMatrizComponent } from './montar-matriz/montar-matriz';
@@ -22,8 +21,8 @@ const routes: Routes = [
 
   {
    path: '',
-    component: LayoutComponent, // O LayoutComponent será renderizado
-    canActivate: [AuthCheckerGuard], // Garante que o usuário esteja autenticado para qualquer rota sob o layout
+    component: LayoutComponent, 
+    canActivate: [AuthCheckerGuard], 
     children: [
       { path: 'home', component: HomeComponent },
 
@@ -58,7 +57,7 @@ const routes: Routes = [
         canActivate: [RoleGuard],
         data: { roles: ['COORDENADOR', 'PROFESSOR', 'ALUNO'] } // Coordenador, Professor, Aluno
       },
-      // Adicione outras rotas aqui conforme necessário
+      
     ]
   },
 

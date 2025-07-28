@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { OidcSecurityService, UserDataResult } from 'angular-auth-oidc-client';
-import { Observable, of } from 'rxjs'; // Importe 'of'
-import { map, switchMap } from 'rxjs/operators'; // Importe 'switchMap'
+import { Observable, of } from 'rxjs'; 
+import { map, switchMap } from 'rxjs/operators'; 
 
 @Injectable({
   providedIn: 'root'
@@ -22,10 +22,9 @@ export class RoleGuard implements CanActivate {
       return of(true); // Nenhuma role necessária, acesso permitido
     }
 
-    return this.oidcSecurityService.getAccessToken().pipe( // Use switchMap para obter o token e depois processar
+    return this.oidcSecurityService.getAccessToken().pipe( 
       switchMap(token => {
         if (!token) {
-          // Se não houver token, o usuário não está autenticado (AutoLoginAllRoutesGuard já deveria ter tratado, mas é uma segurança)
           this.router.navigate(['/home']);
           return of(false);
         }

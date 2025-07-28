@@ -54,13 +54,13 @@ public class SemestreResource {
     }
 
     @POST
-    @RolesAllowed({"COORDENADOR"}) // Apenas coordenadores podem criar semestres
-    public Response criarSemestre(@Valid SemestreRequestDTO semestreDto) { // Recebe DTO para criação
+    @RolesAllowed({"COORDENADOR"})
+    public Response criarSemestre(@Valid SemestreRequestDTO semestreDto) {
         try {
-            Semestre novoSemestre = semestreService.criarSemestre(semestreDto); // Serviço recebe DTO
-            SemestreResponseDTO responseDto = new SemestreResponseDTO(novoSemestre); // Converte entidade persistida para DTO
+            Semestre novoSemestre = semestreService.criarSemestre(semestreDto);
+            SemestreResponseDTO responseDto = new SemestreResponseDTO(novoSemestre);
             return Response.created(UriBuilder.fromResource(SemestreResource.class).path(responseDto.id.toString()).build())
-                    .entity(responseDto) // Retorna DTO
+                    .entity(responseDto)
                     .build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -84,7 +84,7 @@ public class SemestreResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("COORDENADOR") // Apenas coordenadores podem deletar semestres
+    @RolesAllowed("COORDENADOR")
     public Response deletarSemestre(@PathParam("id") Long id) {
         boolean deletado = semestreService.deletarSemestre(id);
         if (deletado) {

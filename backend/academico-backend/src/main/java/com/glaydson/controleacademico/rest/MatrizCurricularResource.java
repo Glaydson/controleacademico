@@ -6,7 +6,6 @@ import com.glaydson.controleacademico.rest.dto.MatrizCurricularResponseDTO;
 import com.glaydson.controleacademico.service.MatrizCurricularService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;

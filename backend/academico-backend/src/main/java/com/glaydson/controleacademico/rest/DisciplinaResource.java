@@ -24,12 +24,12 @@ public class DisciplinaResource {
     DisciplinaService disciplinaService;
 
     public DisciplinaResource(DisciplinaService disciplinaService) {
-        this.disciplinaService = disciplinaService; // Construtor para injeção de dependência
+        this.disciplinaService = disciplinaService;
     }
 
     @GET
-    @RolesAllowed({ "COORDENADOR", "PROFESSOR", "ALUNO"}) // Everyone can view disciplines
-    public List<DisciplinaResponseDTO> listarTodasDisciplinas() { // Returns List of DTOs
+    @RolesAllowed({ "COORDENADOR", "PROFESSOR", "ALUNO"})
+    public List<DisciplinaResponseDTO> listarTodasDisciplinas() {
         return disciplinaService.listarTodasDisciplinas().stream()
                 .map(DisciplinaResponseDTO::new) // Convert entity to DTO
                 .collect(Collectors.toList());
@@ -54,29 +54,29 @@ public class DisciplinaResource {
     }
 
     @POST
-    @RolesAllowed({ "COORDENADOR"}) // Coordinators can create disciplines
-    public Response criarDisciplina(@Valid DisciplinaRequestDTO disciplinaDto) { // Receives DTO for creation
+    @RolesAllowed({ "COORDENADOR"})
+    public Response criarDisciplina(@Valid DisciplinaRequestDTO disciplinaDto) {
         try {
-            Disciplina novaDisciplina = disciplinaService.criarDisciplina(disciplinaDto); // Service now takes DTO
-            DisciplinaResponseDTO responseDto = new DisciplinaResponseDTO(novaDisciplina); // Convert persisted entity to DTO
+            Disciplina novaDisciplina = disciplinaService.criarDisciplina(disciplinaDto);
+            DisciplinaResponseDTO responseDto = new DisciplinaResponseDTO(novaDisciplina);
             return Response.created(UriBuilder.fromResource(DisciplinaResource.class).path(responseDto.id.toString()).build())
-                    .entity(responseDto) // Return DTO
+                    .entity(responseDto)
                     .build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NotFoundException e) { // Catch NotFoundException for associated entities (e.g., Cursos)
+        } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         }
     }
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed({ "COORDENADOR"}) // Coordinators can update disciplines
-    public Response atualizarDisciplina(@PathParam("id") Long id, @Valid DisciplinaRequestDTO disciplinaDto) { // Receives DTO for update
+    @RolesAllowed({ "COORDENADOR"})
+    public Response atualizarDisciplina(@PathParam("id") Long id, @Valid DisciplinaRequestDTO disciplinaDto) {
         try {
-            Disciplina disciplina = disciplinaService.atualizarDisciplina(id, disciplinaDto); // Service now takes DTO
-            DisciplinaResponseDTO responseDto = new DisciplinaResponseDTO(disciplina); // Convert updated entity to DTO
-            return Response.ok(responseDto).build(); // Return DTO
+            Disciplina disciplina = disciplinaService.atualizarDisciplina(id, disciplinaDto);
+            DisciplinaResponseDTO responseDto = new DisciplinaResponseDTO(disciplina);
+            return Response.ok(responseDto).build();
         } catch (NotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (BadRequestException e) {

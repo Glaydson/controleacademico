@@ -14,7 +14,6 @@ const oidcConfig: OpenIdConfiguration = {
   renewTimeBeforeTokenExpiresInSeconds: 30,
   autoUserInfo: true,
   
-  // Substitua a propriedade inválida por:
   triggerAuthorizationResultEvent: true,
   postLoginRoute: '/',
   

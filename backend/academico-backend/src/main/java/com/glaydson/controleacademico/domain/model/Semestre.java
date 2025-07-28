@@ -36,7 +36,6 @@ public class Semestre extends PanacheEntityBase {
     public String getPeriodo() { return periodo; }
     public void setPeriodo(String periodo) { this.periodo = periodo; }
 
-    // Opcional: toString, equals e hashCode para melhor debug e uso em Sets
     @Override
     public String toString() {
         return "Semestre{" +
@@ -56,6 +55,6 @@ public class Semestre extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return 31; // Ou Objects.hash(id); se id for sempre não nulo após persistência
+        return 31;
     }
 }

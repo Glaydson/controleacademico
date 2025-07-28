@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { CursoService } from '../services/curso'; // Importe o serviço
-import { Curso } from '../models/curso.model'; // Importe o modelo
-import { OidcSecurityService } from 'angular-auth-oidc-client'; // ADICIONE ESTA IMPORTAÇÃO
+import { CursoService } from '../services/curso'; 
+import { Curso } from '../models/curso.model'; 
+import { OidcSecurityService } from 'angular-auth-oidc-client'; 
 
 @Component({
   selector: 'app-cursos',
@@ -19,7 +19,7 @@ export class CursosComponent implements OnInit {
 
   constructor(
     private cursoService: CursoService,
-    private oidcSecurityService: OidcSecurityService // ADICIONE ESTA INJEÇÃO
+    private oidcSecurityService: OidcSecurityService 
   ) { }
 
   ngOnInit(): void {
@@ -46,7 +46,6 @@ export class CursosComponent implements OnInit {
       console.log('=== FIM DEBUG TOKEN ===');
     });
 
-    // Seu código original aqui...
     this.cursoService.getCursos().subscribe({
       next: (data) => {
         this.cursos = data;

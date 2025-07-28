@@ -19,9 +19,6 @@ public class AlunoRequestDTO {
     @NotNull(message = "O ID do curso é obrigatório.")
     public Long cursoId;
 
-    // Construtores, Getters e Setters (para Jackson/JAX-RS converterem o JSON)
-    // Opcional: Você pode gerar isso com sua IDE ou Lombok
-
     public AlunoRequestDTO() {
     }
 

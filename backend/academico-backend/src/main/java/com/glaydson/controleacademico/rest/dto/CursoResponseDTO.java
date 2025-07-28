@@ -1,7 +1,6 @@
 package com.glaydson.controleacademico.rest.dto;
 
 import com.glaydson.controleacademico.domain.model.Curso;
-import com.glaydson.controleacademico.domain.model.Coordenador; // Assuming Coordenador entity exists
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,7 +13,6 @@ public class CursoResponseDTO {
 
     public CursoResponseDTO() {}
 
-    // Constructor to convert from Curso entity to CursoResponseDTO
     public CursoResponseDTO(Curso curso) {
         this.id = curso.id;
         this.nome = curso.nome;

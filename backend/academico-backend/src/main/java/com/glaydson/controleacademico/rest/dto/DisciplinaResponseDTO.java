@@ -8,7 +8,7 @@ public class DisciplinaResponseDTO {
     public Long id;
     public String nome;
     public String codigo;
-    public Set<CursoResponseDTO> cursos; // Compact DTOs for associated Cursos
+    public Set<CursoResponseDTO> cursos;
 
     public DisciplinaResponseDTO() {}
 

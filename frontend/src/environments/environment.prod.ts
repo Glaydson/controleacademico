@@ -4,7 +4,7 @@ const oidcConfig: OpenIdConfiguration = {
   authority: 'https://seukeycloak.com/realms/controle-academico', // Altere para a URL do Keycloak em produção
   redirectUrl: window.location.origin,
   postLogoutRedirectUri: window.location.origin,
-  clientId: 'academico-frontend', // Client ID do seu cliente em produção
+  clientId: 'academico-frontend',
   scope: 'openid profile email offline_access',
   responseType: 'code',
   silentRenew: true,

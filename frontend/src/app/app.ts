@@ -3,14 +3,14 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.html', // <-- MUDANÇA CRÍTICA: Aponta para o arquivo HTML
+  templateUrl: './app.html', 
   styleUrls: ['./app.css'],
-  standalone: false // Se você tiver um arquivo CSS para o app.component
+  standalone: false 
 })
 export class AppComponent implements OnInit {
-  title = 'Controle Acadêmico Web'; // Adicione a propriedade title se for usada no HTML
+  title = 'Controle Acadêmico Web'; 
   isAuthenticated = false;
-  userData: any; // Para exibir os dados do usuário no app.html
+  userData: any; 
 
   constructor(public oidcSecurityService: OidcSecurityService) {}
 

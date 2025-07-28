@@ -48,7 +48,7 @@ public class ProfessorResource {
     }
 
     @POST
-    @RolesAllowed("ADMIN") // Apenas administradores criam professores
+    @RolesAllowed("ADMIN")
     public Response criarProfessor(Professor professor) {
         try {
             Professor novoProfessor = professorService.criarProfessor(professor);
@@ -62,7 +62,7 @@ public class ProfessorResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("ADMIN") // Apenas administradores atualizam professores
+    @RolesAllowed("ADMIN")
     public Response atualizarProfessor(@PathParam("id") Long id, Professor professorAtualizado) {
         try {
             Professor professor = professorService.atualizarProfessor(id, professorAtualizado);
@@ -76,7 +76,7 @@ public class ProfessorResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("ADMIN") // Apenas administradores deletam professores
+    @RolesAllowed("ADMIN")
     public Response deletarProfessor(@PathParam("id") Long id) {
         boolean deletado = professorService.deletarProfessor(id);
         if (deletado) {

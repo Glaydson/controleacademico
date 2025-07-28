@@ -55,7 +55,7 @@ public class CoordenadorResource {
     }
 
     @POST
-    @RolesAllowed("ADMIN") // Apenas administradores podem criar coordenadores
+    @RolesAllowed("ADMIN")
     public Response criarCoordenador(@Valid CoordenadorRequestDTO coordenadorDto) {
         try {
             Coordenador novoCoordenador = coordenadorService.criarCoordenador(coordenadorDto);
@@ -72,7 +72,7 @@ public class CoordenadorResource {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("ADMIN") // Apenas administradores atualizam coordenadores
+    @RolesAllowed("ADMIN")
     public Response atualizarCoordenador(@PathParam("id") Long id, @Valid CoordenadorRequestDTO coordenadorDto) {
         try {
             Coordenador coordenador = coordenadorService.atualizarCoordenador(id, coordenadorDto);

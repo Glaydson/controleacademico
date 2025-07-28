@@ -20,14 +20,12 @@ export class LayoutComponent  {
       }
     });
 
-    // É melhor usar o .subscribe dentro do ngOnInit ou de um método, não direto no pipe
     this.oidcSecurityService.getAccessToken().subscribe(token => {
         if (token) {
             try {
                 const decodedToken: any = JSON.parse(atob(token.split('.')[1]));
                 if (decodedToken && decodedToken.realm_access && Array.isArray(decodedToken.realm_access.roles)) {
-                    // Filtrar apenas as roles relevantes para sua aplicação (ADMIN, COORDENADOR, etc.)
-                    // E convertê-las para maiúsculas para corresponder ao token, se necessário
+                    
                     this.userRoles = decodedToken.realm_access.roles.filter((role: string) =>
                         ['ADMIN', 'COORDENADOR', 'PROFESSOR', 'ALUNO'].includes(role.toUpperCase())
                     );
@@ -41,12 +39,10 @@ export class LayoutComponent  {
   }
 
   hasRole(role: string): boolean {
-    // Compare a role passada com as roles do usuário (em maiúsculas para consistência)
     return this.userRoles.includes(role.toUpperCase());
   }
 
   hasAnyRole(roles: string[]): boolean {
-    // Compare as roles passadas com as roles do usuário (em maiúsculas para consistência)
     return roles.some(role => this.userRoles.includes(role.toUpperCase()));
   }
 
