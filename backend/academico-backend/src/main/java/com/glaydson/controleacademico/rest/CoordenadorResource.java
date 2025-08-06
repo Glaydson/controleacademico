@@ -13,7 +13,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Path("/coordenadores")
 @ApplicationScoped

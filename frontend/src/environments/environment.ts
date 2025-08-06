@@ -1,31 +1,44 @@
 import { OpenIdConfiguration, LogLevel } from 'angular-auth-oidc-client';
 
 const oidcConfig: OpenIdConfiguration = {
-  authority: 'http://localhost:8080/realms/controle-academico',
+  configId: 'controle-academico', // Add explicit config ID
+  authority: 'http://keycloak:8080/realms/controle-academico',
   clientId: 'academico-frontend',
   redirectUrl: window.location.origin,
   postLogoutRedirectUri: window.location.origin,
   responseType: 'code',
-  scope: 'openid profile email roles',
+  scope: 'openid profile email roles backend-audience',
   
-  // Configurações otimizadas:
+  // Configurações simplificadas para depuração
   silentRenew: false,
-  useRefreshToken: false,
-  renewTimeBeforeTokenExpiresInSeconds: 30,
-  autoUserInfo: true,
+  useRefreshToken: false, // Temporarily disable to simplify
+  autoUserInfo: false, // Temporarily disable to simplify
   
+  // Configurações de segurança
+  historyCleanupOff: true, // Enable cleanup to avoid state conflicts
+  
+  // Configurações de fluxo
   triggerAuthorizationResultEvent: true,
-  postLoginRoute: '/',
+  postLoginRoute: '/home',
+  forbiddenRoute: '/forbidden',
+  unauthorizedRoute: '/unauthorized',
   
-  // Debug
+  // Debug apenas em desenvolvimento
   logLevel: LogLevel.Debug,
-  customParamsAuthRequest: {
-    prompt: 'login'
-  }
+  
+  // Configurações adicionais para estabilidade
+  ignoreNonceAfterRefresh: false, // Enable nonce validation
+  disableIdTokenValidation: false,
+  
+  // Configuração para PKCE (mais seguro)
+  usePushedAuthorisationRequests: false,
+  
+  // Silent renew configuration
+  silentRenewUrl: window.location.origin + '/silentRenew.html'
 };
 
 export const environment = {
   production: false,
-  oidcConfig: oidcConfig,
-  apiUrl: 'http://localhost:8081'
+  oidcConfig,
+  apiUrl: 'http://localhost:4200/api'
 };

@@ -16,6 +16,7 @@ import java.util.Optional;
 @ApplicationScoped
 public class CoordenadorService {
 
+    public static final String NAO_ENCONTRADO = " não encontrado.";
     CoordenadorRepository coordenadorRepository;
     CursoRepository cursoRepository;
 
@@ -33,18 +34,18 @@ public class CoordenadorService {
     }
 
     public Optional<Coordenador> buscarCoordenadorPorMatricula(String matricula) {
-        return coordenadorRepository.find("matriculaFuncional", matricula).firstResultOptional();
+        return coordenadorRepository.find("matricula", matricula).firstResultOptional();
     }
 
     @Transactional
     public Coordenador criarCoordenador(CoordenadorRequestDTO coordenadorDto) { // Recebe o DTO
-        if (coordenadorRepository.find("matriculaFuncional", coordenadorDto.matricula).count() > 0) {
+        if (coordenadorRepository.find("matricula", coordenadorDto.matricula).count() > 0) {
             throw new BadRequestException("Já existe um coordenador com a matrícula " + coordenadorDto.matricula);
         }
 
         // Valida se o curso já tem um coordenador
         Curso cursoExistente = cursoRepository.findByIdOptional(coordenadorDto.cursoId)
-                .orElseThrow(() -> new NotFoundException("Curso com ID " + coordenadorDto.cursoId + " não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Curso com ID " + coordenadorDto.cursoId + NAO_ENCONTRADO));
 
         if (coordenadorRepository.find("curso", cursoExistente).count() > 0) {
             throw new BadRequestException("O Curso '" + cursoExistente.nome + "' já possui um coordenador.");
@@ -63,7 +64,7 @@ public class CoordenadorService {
     @Transactional
     public Coordenador atualizarCoordenador(Long id, CoordenadorRequestDTO coordenadorDto) { // Pode reutilizar o DTO de criação para atualização simples
         Coordenador coordenadorExistente = coordenadorRepository.findByIdOptional(id)
-                .orElseThrow(() -> new NotFoundException("Coordenador com ID " + id + " não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Coordenador com ID " + id + NAO_ENCONTRADO));
 
         // Validação de unicidade para matrícula (se alterada)
         if (!coordenadorExistente.matricula.equals(coordenadorDto.matricula) &&
@@ -77,7 +78,7 @@ public class CoordenadorService {
         // Lógica de atualização de curso
         if (coordenadorDto.cursoId != null) {
             Curso novoCurso = cursoRepository.findByIdOptional(coordenadorDto.cursoId)
-                    .orElseThrow(() -> new NotFoundException("Curso com ID " + coordenadorDto.cursoId + " não encontrado."));
+                    .orElseThrow(() -> new NotFoundException("Curso com ID " + coordenadorDto.cursoId + NAO_ENCONTRADO));
 
             // Verifica se o novo curso já tem um coordenador (diferente do coordenador atual)
             // Usamos como regra que a alteração do coordenador do curso deve ser feita no curso.

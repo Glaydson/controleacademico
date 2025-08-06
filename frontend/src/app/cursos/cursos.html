@@ -1,57 +1,143 @@
 
-<section>
-  <h2>Gestão de Cursos</h2>
+<div class="cursos-container">
+  <header class="section-header">
+    <h2 class="section-title">Gestão de Cursos</h2>
+    <p class="section-subtitle">Crie, edite e gerencie os cursos do sistema acadêmico</p>
+  </header>
 
-  <h3>Criar Novo Curso</h3>
-  <div>
-    <label for="novoNome">Nome:</label>
-    <input id="novoNome" [(ngModel)]="novoCurso.nome" placeholder="Nome do Curso" required>
-  </div>
-  <div>
-    <label for="novoCodigo">Código:</label>
-    <input id="novoCodigo" [(ngModel)]="novoCurso.codigo" placeholder="Código (Ex: ES)" required>
-  </div>
-  <button (click)="criarCurso()">Criar Curso</button>
+  <!-- Formulário de Criação -->
+  <section class="create-form-section">
+    <div class="form-card">
+      <h3 class="form-title">
+        <span class="form-icon">➕</span>
+        Criar Novo Curso
+      </h3>
+      
+      <form class="course-form">
+        <div class="form-group">
+          <label for="novoNome" class="form-label">Nome do Curso</label>
+          <input 
+            id="novoNome" 
+            name="novoNome"
+            [(ngModel)]="novoCurso.nome" 
+            placeholder="Ex: Engenharia de Software"
+            class="form-input"
+            required>
+        </div>
+        
+        <div class="form-group">
+          <label for="novoCodigo" class="form-label">Código do Curso</label>
+          <input 
+            id="novoCodigo" 
+            name="novoCodigo"
+            [(ngModel)]="novoCurso.codigo" 
+            placeholder="Ex: ES"
+            class="form-input"
+            required>
+        </div>
+        
+        <button type="button" (click)="criarCurso()" class="btn btn-primary">
+          <span class="btn-icon">💾</span>
+          Criar Curso
+        </button>
+      </form>
+    </div>
+  </section>
 
-  <hr>
+  <!-- Lista de Cursos -->
+  <section class="courses-list-section">
+    <div class="list-header">
+      <h3 class="list-title">
+        <span class="list-icon">📚</span>
+        Cursos Existentes
+      </h3>
+      <div class="course-count" *ngIf="cursos.length > 0">
+        {{ cursos.length }} curso(s) cadastrado(s)
+      </div>
+    </div>
 
-  <h3>Cursos Existentes</h3>
-  <table *ngIf="cursos.length > 0; else noCursos">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Código</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let curso of cursos">
-        <td>{{ curso.id }}</td>
-        <td *ngIf="cursoEmEdicao?.id !== curso.id">{{ curso.nome }}</td>
-        <td *ngIf="cursoEmEdicao?.id !== curso.id">{{ curso.codigo }}</td>
+    <!-- Tabela Responsiva -->
+    <div class="table-container" *ngIf="cursos.length > 0; else noCursos">
+      <div class="table-wrapper">
+        <table class="courses-table">
+          <thead>
+            <tr>
+              <th class="th-id">ID</th>
+              <th class="th-name">Nome</th>
+              <th class="th-code">Código</th>
+              <th class="th-actions">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let curso of cursos" class="table-row">
+              <td class="td-id" [attr.data-label]="'ID'">
+                <span class="id-badge">{{ curso.id }}</span>
+              </td>
+              
+              <!-- Modo Visualização -->
+              <td class="td-name" [attr.data-label]="'Nome'" *ngIf="cursoEmEdicao?.id !== curso.id">
+                <span class="course-name">{{ curso.nome }}</span>
+              </td>
+              <td class="td-code" [attr.data-label]="'Código'" *ngIf="cursoEmEdicao?.id !== curso.id">
+                <span class="course-code">{{ curso.codigo }}</span>
+              </td>
 
-        <td *ngIf="cursoEmEdicao?.id === curso.id">
-          <input [(ngModel)]="cursoEmEdicao!.nome">
-        </td>
-        <td *ngIf="cursoEmEdicao?.id === curso.id">
-          <input [(ngModel)]="cursoEmEdicao!.codigo">
-        </td>
+              <!-- Modo Edição -->
+              <td class="td-name" [attr.data-label]="'Nome'" *ngIf="cursoEmEdicao?.id === curso.id">
+                <input 
+                  name="editNome"
+                  [(ngModel)]="cursoEmEdicao!.nome" 
+                  class="edit-input"
+                  placeholder="Nome do curso">
+              </td>
+              <td class="td-code" [attr.data-label]="'Código'" *ngIf="cursoEmEdicao?.id === curso.id">
+                <input 
+                  name="editCodigo"
+                  [(ngModel)]="cursoEmEdicao!.codigo" 
+                  class="edit-input"
+                  placeholder="Código">
+              </td>
 
-        <td>
-          <ng-container *ngIf="cursoEmEdicao?.id !== curso.id">
-            <button (click)="iniciarEdicao(curso)">Editar</button>
-            <button (click)="removerCurso(curso.id)">Remover</button>
-          </ng-container>
-          <ng-container *ngIf="cursoEmEdicao?.id === curso.id">
-            <button (click)="salvarEdicao()">Salvar</button>
-            <button (click)="cancelarEdicao()">Cancelar</button>
-          </ng-container>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <ng-template #noCursos>
-    <p>Nenhum curso cadastrado ainda.</p>
-  </ng-template>
-</section>
+              <td class="td-actions" [attr.data-label]="'Ações'">
+                <!-- Botões Visualização -->
+                <div class="action-buttons" *ngIf="cursoEmEdicao?.id !== curso.id">
+                  <button (click)="iniciarEdicao(curso)" class="btn btn-secondary btn-sm">
+                    <span class="btn-icon">✏️</span>
+                    <span class="btn-text">Editar</span>
+                  </button>
+                  <button (click)="removerCurso(curso.id)" class="btn btn-danger btn-sm">
+                    <span class="btn-icon">🗑️</span>
+                    <span class="btn-text">Remover</span>
+                  </button>
+                </div>
+                
+                <!-- Botões Edição -->
+                <div class="action-buttons" *ngIf="cursoEmEdicao?.id === curso.id">
+                  <button (click)="salvarEdicao()" class="btn btn-success btn-sm">
+                    <span class="btn-icon">💾</span>
+                    <span class="btn-text">Salvar</span>
+                  </button>
+                  <button (click)="cancelarEdicao()" class="btn btn-outline btn-sm">
+                    <span class="btn-icon">❌</span>
+                    <span class="btn-text">Cancelar</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Estado Vazio -->
+    <ng-template #noCursos>
+      <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <h4 class="empty-title">Nenhum curso cadastrado</h4>
+        <p class="empty-description">
+          Comece criando seu primeiro curso usando o formulário acima.
+        </p>
+      </div>
+    </ng-template>
+  </section>
+</div>
