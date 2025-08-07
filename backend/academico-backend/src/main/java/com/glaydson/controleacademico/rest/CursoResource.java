@@ -88,11 +88,15 @@ public class CursoResource {
     @Path("/{id}")
     @RolesAllowed("COORDENADOR") // Apenas administradores podem deletar cursos
     public Response deletarCurso(@PathParam("id") Long id) {
-        boolean deletado = cursoService.deletarCurso(id);
-        if (deletado) {
-            return Response.noContent().build();
-        } else {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        try {
+            boolean deletado = cursoService.deletarCurso(id);
+            if (deletado) {
+                return Response.noContent().build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+        } catch (jakarta.ws.rs.NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         }
     }
 }
