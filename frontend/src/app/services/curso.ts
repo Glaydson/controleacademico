@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class CursoService {
-  private apiUrl = `${environment.apiUrl}/cursos`;
+  private apiUrl = '/api/cursos'; // Use relative URL that goes through nginx proxy
 
   constructor(private http: HttpClient) { 
     console.log('🔧 [CURSO-SERVICE] Inicializado com URL:', this.apiUrl);

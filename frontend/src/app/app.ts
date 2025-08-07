@@ -50,13 +50,14 @@ export class AppComponent implements OnInit {
   }
 
   private checkAuthSafely() {
-    // First check if we have a token without triggering full auth check
-    this.oidcSecurityService.isAuthenticated$.pipe().subscribe({
+    // Check authentication without triggering callback processing
+    this.oidcSecurityService.isAuthenticated$.subscribe({
       next: (result) => {
-        console.log('🔍 [APP] Quick auth check:', result);
+        console.log('� [APP] Safe auth check:', result.isAuthenticated);
         this.isAuthenticated = result.isAuthenticated;
+        
         if (result.isAuthenticated) {
-          this.loadUserData();
+          this.loadUserDataFromToken();
         }
       }
     });
@@ -77,8 +78,8 @@ export class AppComponent implements OnInit {
         if (result.isAuthenticated) {
           console.log('✅ [APP] Usuário autenticado com sucesso');
           
-          // Busca dados do usuário separadamente
-          this.loadUserData();
+          // Load user data from token claims instead of separate endpoint
+          this.loadUserDataFromToken();
           
         } else {
           console.log('🚪 [APP] Usuário não autenticado - aguardando interação do usuário');
@@ -95,10 +96,26 @@ export class AppComponent implements OnInit {
           name: err.name
         });
         
-        // If this is a state error, try to clear the URL
+        // If this is a state error, try to clear the URL and check auth again
         if (err.message && err.message.includes('could not find matching config for state')) {
           console.log('🧹 [APP] Limpando URL devido a erro de state');
+          
+          // Clear any stored state
+          try {
+            localStorage.removeItem('angular-auth-oidc-client-code-flow-state');
+            localStorage.removeItem('angular-auth-oidc-client-code-flow-nonce');
+            sessionStorage.removeItem('angular-auth-oidc-client-code-flow-state');
+            sessionStorage.removeItem('angular-auth-oidc-client-code-flow-nonce');
+          } catch (storageErr) {
+            console.log('🧹 [APP] Erro limpando storage:', storageErr);
+          }
+          
           window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Try a safer auth check after clearing URL
+          setTimeout(() => {
+            this.checkAuthSafely();
+          }, 100);
         }
       }
     });
@@ -112,6 +129,35 @@ export class AppComponent implements OnInit {
       },
       error: (err) => {
         console.error('❌ [APP] Erro ao carregar dados do usuário:', err);
+        // Fallback to loading from token
+        this.loadUserDataFromToken();
+      }
+    });
+  }
+
+  private loadUserDataFromToken() {
+    // Get user data from ID token claims instead of userinfo endpoint
+    this.oidcSecurityService.getPayloadFromIdToken().subscribe({
+      next: (tokenData) => {
+        if (tokenData) {
+          // Extract user info from token claims
+          this.userData = {
+            sub: tokenData.sub,
+            name: tokenData.name || tokenData.preferred_username,
+            email: tokenData.email,
+            given_name: tokenData.given_name,
+            family_name: tokenData.family_name,
+            preferred_username: tokenData.preferred_username,
+            realm_access: tokenData.realm_access,
+            resource_access: tokenData.resource_access
+          };
+          console.log('👤 [APP] Dados do usuário extraídos do token:', this.userData);
+        } else {
+          console.log('⚠️ [APP] Nenhum dado encontrado no token');
+        }
+      },
+      error: (err) => {
+        console.error('❌ [APP] Erro ao extrair dados do token:', err);
       }
     });
   }

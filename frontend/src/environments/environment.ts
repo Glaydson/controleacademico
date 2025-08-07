@@ -2,7 +2,7 @@ import { OpenIdConfiguration, LogLevel } from 'angular-auth-oidc-client';
 
 const oidcConfig: OpenIdConfiguration = {
   configId: 'controle-academico', // Add explicit config ID
-  authority: 'http://keycloak:8080/realms/controle-academico',
+  authority: window.location.origin + '/realms/controle-academico',
   clientId: 'academico-frontend',
   redirectUrl: window.location.origin,
   postLogoutRedirectUri: window.location.origin,

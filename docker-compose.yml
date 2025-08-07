@@ -10,12 +10,10 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
-      KC_HOSTNAME: keycloak # This hostname is for browser-based access to Keycloak
-      #KC_HOSTNAME_ADMIN: localhost
-      KC_HTTP_ENABLED: 'true'
-      KC_FEATURES: 'token-exchange,admin-fine-grained-authz'
       KC_HOSTNAME_STRICT: "false"  # Permite acesso por diferentes hosts
       KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: 'true'
+      KC_FEATURES: 'token-exchange,admin-fine-grained-authz'
       KC_PROXY: edge  # Configuração importante para proxy reverso
     ports:
       - "8080:8080"
@@ -86,6 +84,7 @@ services:
       QUARKUS_HTTP_HOST: 0.0.0.0
       QUARKUS_HTTP_PORT: 8081
       QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/controle-academico
+      QUARKUS_OIDC_TOKEN_ISSUER: http://localhost:8080/realms/controle-academico
       # Configurações CORS via variáveis de ambiente
       QUARKUS_HTTP_CORS: "true"
       QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:4200,http://frontend:4200"

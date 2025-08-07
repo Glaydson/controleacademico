@@ -287,8 +287,13 @@
 }
 
 .course-name {
+  background: #eff6ff;
+  color: #1e40af;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
   font-weight: 600;
-  color: #1f2937;
+  font-size: 0.875rem;
+  display: inline-block;
 }
 
 .course-code {
@@ -301,22 +306,43 @@
   display: inline-block;
 }
 
+/* Edit Input - Maximum Visibility */
 .edit-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #d1d5db;
+  border: 2px solid #374151;
   border-radius: 6px;
   font-size: 1rem;
-  background: white;
-  color: #1f2937;
-  font-weight: 500;
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 600;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  -webkit-text-fill-color: #000000 !important;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .edit-input:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  color: #1f2937;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.edit-input::placeholder {
+  color: #6b7280 !important;
+  opacity: 0.7;
+}
+
+/* Ensure table cells don't interfere with input styling */
+.td-name .edit-input,
+.td-code .edit-input {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
 }
 
 .action-buttons {
@@ -492,6 +518,21 @@
   
   .table-row:hover {
     background: #374151;
+  }
+  
+  /* Force edit inputs to remain visible in dark mode */
+  .edit-input {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #6b7280 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+  
+  .edit-input:focus {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #3b82f6 !important;
+    -webkit-text-fill-color: #000000 !important;
   }
 }
 
