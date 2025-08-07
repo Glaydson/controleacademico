@@ -25,6 +25,7 @@ services:
       - start-dev
     volumes:
       - keycloak_app_data:/opt/keycloak/data
+      - ./keycloak-theme:/opt/keycloak/themes
     
   keycloak-db:
     image: postgres:17
