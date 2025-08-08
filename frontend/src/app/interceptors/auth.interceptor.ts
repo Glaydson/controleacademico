@@ -17,7 +17,11 @@ export class AuthInterceptor implements HttpInterceptor {
       '/realms/',
       '/.well-known/',
       '/oauth2/',
-      '/token'
+      '/token',
+      '/swagger-ui',
+      '/openapi',
+      '/q/health',
+      '/q/metrics'
     ];
     
     // Verifica se a URL é o callback do OIDC para evitar loops
