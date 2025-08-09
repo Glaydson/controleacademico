@@ -22,6 +22,9 @@ public abstract class Pessoa extends PanacheEntityBase {
     @Column(nullable = false, unique = true)
     public String matricula;
 
+    @Column(name = "keycloak_id", unique = true)
+    public String keycloakId;
+
 
     // Construtores, getters e setters
     public Pessoa() {}
@@ -54,5 +57,13 @@ public abstract class Pessoa extends PanacheEntityBase {
 
     public void setMatricula(String matricula) {
         this.matricula = matricula;
+    }
+
+    public String getKeycloakId() {
+        return keycloakId;
+    }
+
+    public void setKeycloakId(String keycloakId) {
+        this.keycloakId = keycloakId;
     }
 }
