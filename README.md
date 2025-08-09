@@ -1,16 +1,26 @@
 # Aplicação Controle Acadêmico - V1 (em construção)
 
 ## Situação Atual
-- Backend: Todos os endpoints REST implementados, com autenticação e autorização via keycloak.
-- Frontend: Implementação inicial do Angular 20, com autenticação via keycloak.
+### Backend: 
+    Todos os endpoints REST implementados, com autenticação e autorização via keycloak.
+    Implementada a criação de novos usuários
+    Testes Unitários para Cursos e Usuários implementados.
+    Documentação da API gerada com OpenAPI 3.0.
 
-Em construção:
-- Testes unitários e de integração no backend.
-- Funcionalidades no frontend. Apenas a gestão de cursos está implementada.
+### Frontend:
+    Implementada a gestão de cursos (visualização, criação, edição, remoção), com autenticação via keycloak.
+
+Em construção/pendente:
+- Demais testes unitários (Matriz Curricular, Disciplinas, Semestres, etc.);
+- Implementação da criação de usuários no frontend;
+- Demais funcionalidades no frontend. 
+- Melhoria das mensagens de erro no frontend;
+- 
 
 Problemas conhecidos:
-- A autenticação via keycloak no frontend ainda não está totalmente funcional.
+- A autenticação via keycloak no frontend funciona mas ainda apresenta problemas ocasionais, sem no entanto comprometer a usabilidade.
 
+## Descrição do Projeto
 Este projeto consiste em uma aplicação de Controle Acadêmico, que permite a gestão de cursos. Possui como usuários básicos 
 Coordenadores, Professores e Alunos. 
 
