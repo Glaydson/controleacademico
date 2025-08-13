@@ -4,10 +4,10 @@ import com.glaydson.controleacademico.domain.model.*;
 import com.glaydson.controleacademico.domain.repository.CursoRepository;
 import com.glaydson.controleacademico.domain.repository.DisciplinaRepository;
 import com.glaydson.controleacademico.rest.dto.UserCreateRequestDTO;
+import com.glaydson.controleacademico.rest.dto.UserResponseDTO;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -35,10 +35,13 @@ public class UserService {
     @ConfigProperty(name = "quarkus.keycloak.admin-client.client-secret")
     String clientSecret;
 
-    @Inject
+    public UserService(CursoRepository cursoRepository, DisciplinaRepository disciplinaRepository) {
+        this.cursoRepository = cursoRepository;
+        this.disciplinaRepository = disciplinaRepository;
+    }
+
     CursoRepository cursoRepository;
 
-    @Inject
     DisciplinaRepository disciplinaRepository;
 
     private Keycloak getKeycloakAdminClient() {
@@ -210,5 +213,213 @@ public class UserService {
         Coordenador coordenador = new Coordenador(dto.getNome(), dto.getMatricula(), curso);
         coordenador.keycloakId = keycloakId;
         coordenador.persist();
+    }
+
+    // New methods for user management
+
+    public java.util.List<UserResponseDTO> getAllUsers() {
+        Keycloak keycloak = null;
+        try {
+            keycloak = getKeycloakAdminClient();
+            
+            var users = keycloak.realm(realm).users().list();
+            java.util.List<com.glaydson.controleacademico.rest.dto.UserResponseDTO> result = new java.util.ArrayList<>();
+            
+            for (org.keycloak.representations.idm.UserRepresentation user : users) {
+                var userDto = new com.glaydson.controleacademico.rest.dto.UserResponseDTO();
+                userDto.setId(user.getId());
+                userDto.setNome(user.getFirstName());
+                userDto.setEmail(user.getEmail());
+                userDto.setEnabled(user.isEnabled());
+                
+                // Get user roles
+                var realmRoles = keycloak.realm(realm).users().get(user.getId()).roles().realmLevel().listEffective();
+                if (!realmRoles.isEmpty()) {
+                    // Find first non-default role
+                    for (var role : realmRoles) {
+                        if (!role.getName().equals("default-roles-academico") && !role.getName().equals("offline_access") && !role.getName().equals("uma_authorization")) {
+                            userDto.setRole(role.getName());
+                            break;
+                        }
+                    }
+                }
+                
+                // Get matricula from local database based on role
+                populateLocalUserData(userDto);
+                
+                result.add(userDto);
+            }
+            
+            return result;
+        } finally {
+            if (keycloak != null) {
+                keycloak.close();
+            }
+        }
+    }
+
+    public UserResponseDTO getUserById(String id) {
+        Keycloak keycloak = null;
+        try {
+            keycloak = getKeycloakAdminClient();
+            
+            var user = keycloak.realm(realm).users().get(id).toRepresentation();
+            var userDto = new UserResponseDTO();
+            userDto.setId(user.getId());
+            userDto.setNome(user.getFirstName());
+            userDto.setEmail(user.getEmail());
+            userDto.setEnabled(user.isEnabled());
+            
+            // Get user roles
+            var realmRoles = keycloak.realm(realm).users().get(user.getId()).roles().realmLevel().listEffective();
+            if (!realmRoles.isEmpty()) {
+                for (var role : realmRoles) {
+                    if (!role.getName().equals("default-roles-academico") && !role.getName().equals("offline_access") && !role.getName().equals("uma_authorization")) {
+                        userDto.setRole(role.getName());
+                        break;
+                    }
+                }
+            }
+            
+            populateLocalUserData(userDto);
+            
+            return userDto;
+        } finally {
+            if (keycloak != null) {
+                keycloak.close();
+            }
+        }
+    }
+
+    public void updateUser(String id, UserCreateRequestDTO requestDTO) {
+        Keycloak keycloak = null;
+        try {
+            keycloak = getKeycloakAdminClient();
+            
+            // Update user in Keycloak
+            var user = keycloak.realm(realm).users().get(id).toRepresentation();
+            user.setFirstName(requestDTO.getNome());
+            user.setEmail(requestDTO.getEmail());
+            user.setUsername(requestDTO.getEmail());
+            
+            keycloak.realm(realm).users().get(id).update(user);
+            
+            // Update password if provided
+            if (requestDTO.getPassword() != null && !requestDTO.getPassword().trim().isEmpty()) {
+                CredentialRepresentation credential = new CredentialRepresentation();
+                credential.setType(CredentialRepresentation.PASSWORD);
+                credential.setValue(requestDTO.getPassword());
+                credential.setTemporary(false);
+                keycloak.realm(realm).users().get(id).resetPassword(credential);
+            }
+            
+            // Update roles if needed
+            updateUserRoles(keycloak, id, requestDTO.getRole());
+            
+            // Update local data
+            updateLocalUser(id, requestDTO);
+            
+        } finally {
+            if (keycloak != null) {
+                keycloak.close();
+            }
+        }
+    }
+
+    public void deleteUser(String id) {
+        Keycloak keycloak = null;
+        try {
+            keycloak = getKeycloakAdminClient();
+            
+            // Delete from local database first
+            deleteLocalUser(id);
+            
+            // Delete from Keycloak
+            keycloak.realm(realm).users().get(id).remove();
+            
+        } finally {
+            if (keycloak != null) {
+                keycloak.close();
+            }
+        }
+    }
+
+    private void populateLocalUserData(com.glaydson.controleacademico.rest.dto.UserResponseDTO userDto) {
+        String role = userDto.getRole();
+        String keycloakId = userDto.getId();
+        
+        if (role != null) {
+            switch (role.toUpperCase()) {
+                case "ALUNO":
+                    var aluno = Aluno.find("keycloakId", keycloakId).firstResult();
+                    if (aluno != null) {
+                        userDto.setMatricula(((Aluno) aluno).matricula);
+                        if (((Aluno) aluno).curso != null) {
+                            userDto.setCursoId(((Aluno) aluno).curso.id);
+                            userDto.setCursoNome(((Aluno) aluno).curso.nome);
+                        }
+                    }
+                    break;
+                case "PROFESSOR":
+                    var professor = Professor.find("keycloakId", keycloakId).firstResult();
+                    if (professor != null) {
+                        userDto.setMatricula(((Professor) professor).matricula);
+                        if (((Professor) professor).disciplinas != null) {
+                            userDto.setDisciplinaIds(((Professor) professor).disciplinas.stream()
+                                .map(d -> d.id).collect(java.util.stream.Collectors.toSet()));
+                            userDto.setDisciplinaNomes(((Professor) professor).disciplinas.stream()
+                                .map(d -> d.nome).collect(java.util.stream.Collectors.toSet()));
+                        }
+                    }
+                    break;
+                case "COORDENADOR":
+                    var coordenador = Coordenador.find("keycloakId", keycloakId).firstResult();
+                    if (coordenador != null) {
+                        userDto.setMatricula(((Coordenador) coordenador).matricula);
+                        if (((Coordenador) coordenador).curso != null) {
+                            userDto.setCursoId(((Coordenador) coordenador).curso.id);
+                            userDto.setCursoNome(((Coordenador) coordenador).curso.nome);
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void updateUserRoles(Keycloak keycloak, String userId, String newRole) {
+        // Remove existing roles
+        var currentRoles = keycloak.realm(realm).users().get(userId).roles().realmLevel().listEffective();
+        java.util.List<RoleRepresentation> rolesToRemove = new java.util.ArrayList<>();
+        
+        for (var role : currentRoles) {
+            if (role.getName().equals("ALUNO") || role.getName().equals("PROFESSOR") || role.getName().equals("COORDENADOR")) {
+                rolesToRemove.add(role);
+            }
+        }
+        
+        if (!rolesToRemove.isEmpty()) {
+            keycloak.realm(realm).users().get(userId).roles().realmLevel().remove(rolesToRemove);
+        }
+        
+        // Add new role
+        RoleRepresentation newRoleRep = keycloak.realm(realm).roles().get(newRole).toRepresentation();
+        if (newRoleRep != null) {
+            keycloak.realm(realm).users().get(userId).roles().realmLevel().add(Collections.singletonList(newRoleRep));
+        }
+    }
+
+    private void updateLocalUser(String keycloakId, UserCreateRequestDTO requestDTO) {
+        // Remove from old role tables
+        deleteLocalUser(keycloakId);
+        
+        // Add to new role table
+        saveLocalUser(requestDTO, keycloakId);
+    }
+
+    private void deleteLocalUser(String keycloakId) {
+        // Delete from all role tables
+        Aluno.delete("keycloakId", keycloakId);
+        Professor.delete("keycloakId", keycloakId);
+        Coordenador.delete("keycloakId", keycloakId);
     }
 }
