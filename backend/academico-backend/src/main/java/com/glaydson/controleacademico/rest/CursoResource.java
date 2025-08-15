@@ -27,7 +27,7 @@ public class CursoResource {
     }
 
     @GET
-    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"})
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR", "ADMIN" })  // Admin necessita disto para que o curso de um coordenador apareça na tela
     public List<CursoResponseDTO> listarTodosCursos() {
         return cursoService.listarTodosCursos().stream()
                 .map(CursoResponseDTO::new)
@@ -36,7 +36,7 @@ public class CursoResource {
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR"})
+    @RolesAllowed({ "COORDENADOR", "ALUNO", "PROFESSOR", "ADMIN" }) // Admin necessita disto para que o curso de um coordenador apareça na tela
     public Response buscarCursoPorId(@PathParam("id") Long id) {
         return cursoService.buscarCursoPorId(id)
                 .map(curso -> Response.ok(new CursoResponseDTO(curso)).build()) // Convert entity to DTO

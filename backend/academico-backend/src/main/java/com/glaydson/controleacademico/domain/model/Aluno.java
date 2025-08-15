@@ -11,11 +11,24 @@ public class Aluno extends Pessoa {
     @JoinColumn(name = "curso_id", nullable = false) // Chave estrangeira para Curso
     public Curso curso;
 
+    @Column(nullable = false, unique = true)
+    public String matricula;
+
     public Aluno() {}
 
-    public Aluno(String nome, String matricula, Curso curso) {
-        super(nome, matricula);
+    public Aluno(String nome, String matricula, Curso curso, String keycloakId) {
+        super(nome, keycloakId);
+        this.matricula = matricula;
         this.curso = curso;
+    }
+
+    // Getters e Setters
+    public String getMatricula() {
+        return matricula;
+    }
+
+    public void setMatricula(String matricula) {
+        this.matricula = matricula;
     }
 
     public Curso getCurso() {

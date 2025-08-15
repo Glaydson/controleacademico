@@ -48,6 +48,8 @@ services:
   backend-db:
     image: postgres:16.1-alpine # Versão estável e leve do Postgres
     container_name: controle_academico_backend_db
+    ports:
+      - "5432:5432"  # Expose PostgreSQL port to host machine
     environment:
       POSTGRES_DB: academico_db       # Nome do banco de dados do backend
       POSTGRES_USER: academico_user   # Usuário do backend

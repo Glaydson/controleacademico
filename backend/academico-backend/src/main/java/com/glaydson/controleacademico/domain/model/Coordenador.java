@@ -9,6 +9,9 @@ import jakarta.persistence.*;
 @DiscriminatorValue("COORDENADOR") // Valor para a coluna 'tipo_pessoa'
 public class Coordenador extends Pessoa { // Agora Coordenador estende Pessoa
 
+    @Column(nullable = false, unique = true)
+    public String registro;
+
     @OneToOne // Relação 1:1 com Curso, esta é a entidade proprietária
     @JoinColumn(name = "curso_id", nullable = false, unique = true) // 'unique=true' garante o 1:1 no DB
     public Curso curso;
@@ -16,8 +19,9 @@ public class Coordenador extends Pessoa { // Agora Coordenador estende Pessoa
     // Construtores
     public Coordenador() {}
 
-    public Coordenador(String nome, String matricula, Curso curso) { // Construtor com email
-        super(nome, matricula); // Chama o construtor da superclasse Pessoa
+    public Coordenador(String nome, String registro, Curso curso, String keycloakId) { // Construtor com email
+        super(nome, keycloakId); // Chama o construtor da superclasse Pessoa
+        this.registro = registro;
         this.curso = curso;
     }
 
@@ -29,4 +33,13 @@ public class Coordenador extends Pessoa { // Agora Coordenador estende Pessoa
     public void setCurso(Curso curso) {
         this.curso = curso;
     }
+
+    public String getRegistro() {
+        return registro;
+    }
+
+    public void setRegistro(String registro) {
+        this.registro = registro;
+    }
+
 }

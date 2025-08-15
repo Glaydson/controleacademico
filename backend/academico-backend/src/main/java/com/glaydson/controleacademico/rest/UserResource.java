@@ -31,7 +31,7 @@ public class UserResource {
             System.err.println("=== Exception in UserResource.getAllUsers(): " + e.getMessage());
             e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error retrieving users: " + e.getMessage())
+                    .entity(java.util.Map.of("message", "Error retrieving users: " + e.getMessage(), "success", false))
                     .build();
         }
     }
@@ -45,7 +45,7 @@ public class UserResource {
             return Response.ok(user).build();
         } catch (Exception e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("User not found: " + e.getMessage())
+                    .entity(java.util.Map.of("message", "User not found: " + e.getMessage(), "success", false))
                     .build();
         }
     }
@@ -54,13 +54,13 @@ public class UserResource {
     @RolesAllowed("ADMIN")
     public Response createUser(UserCreateRequestDTO requestDTO) {
         try {
-            userService.createUser(requestDTO);
+            var createdUser = userService.createUser(requestDTO);
             return Response.status(Response.Status.CREATED)
-                    .entity("User created successfully.")
+                    .entity(createdUser)
                     .build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(e.getMessage())
+                    .entity(java.util.Map.of("message", e.getMessage(), "success", false))
                     .build();
         }
     }
@@ -71,10 +71,10 @@ public class UserResource {
     public Response updateUser(@PathParam("id") String id, UserCreateRequestDTO requestDTO) {
         try {
             userService.updateUser(id, requestDTO);
-            return Response.ok("User updated successfully.").build();
+            return Response.ok(java.util.Map.of("message", "User updated successfully.", "success", true)).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Error updating user: " + e.getMessage())
+                    .entity(java.util.Map.of("message", "Error updating user: " + e.getMessage(), "success", false))
                     .build();
         }
     }
@@ -85,10 +85,10 @@ public class UserResource {
     public Response deleteUser(@PathParam("id") String id) {
         try {
             userService.deleteUser(id);
-            return Response.ok("User deleted successfully.").build();
+            return Response.ok(java.util.Map.of("message", "User deleted successfully.", "success", true)).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Error deleting user: " + e.getMessage())
+                    .entity(java.util.Map.of("message", "Error deleting user: " + e.getMessage(), "success", false))
                     .build();
         }
     }
@@ -102,7 +102,20 @@ public class UserResource {
             return Response.ok(roles).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error retrieving admin roles: " + e.getMessage())
+                    .entity(java.util.Map.of("message", "Error retrieving admin roles: " + e.getMessage(), "success", false))
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("/sync-keycloak")
+    public Response syncKeycloakUsers() {
+        try {
+            userService.syncKeycloakUsersToBackend();
+            return Response.ok(java.util.Map.of("message", "Keycloak users synchronized to backend database successfully", "success", true)).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(java.util.Map.of("message", "Error synchronizing users: " + e.getMessage(), "success", false))
                     .build();
         }
     }

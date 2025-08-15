@@ -37,8 +37,8 @@ public class ProfessorService {
             throw new BadRequestException("ID deve ser nulo para criar um novo professor.");
         }
         // Exemplo de validação de negócio: garantir que o registro seja único
-        if (professorRepository.find("matricula", professor.getMatricula()).count() > 0) {
-            throw new BadRequestException("Já existe um professor com a matricula " + professor.getMatricula());
+        if (professorRepository.find("matricula", professor.getRegistro()).count() > 0) {
+            throw new BadRequestException("Já existe um professor com o registro " + professor.getRegistro());
         }
         professorRepository.persist(professor);
         return professor;
@@ -51,7 +51,7 @@ public class ProfessorService {
 
         // Atualiza os campos
         professorExistente.setNome(professorAtualizado.getNome());
-        professorExistente.setMatricula(professorAtualizado.getMatricula());
+        professorExistente.setRegistro(professorAtualizado.getRegistro());
 
         // O Panache detecta as alterações e as persiste na transação
         return professorExistente;

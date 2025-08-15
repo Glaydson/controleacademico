@@ -14,7 +14,7 @@ public class CoordenadorResponseDTO {
     public CoordenadorResponseDTO(Coordenador coordenador) {
         this.id = coordenador.id;
         this.nome = coordenador.nome;
-        this.matricula = coordenador.matricula;
+        this.matricula = coordenador.getRegistro();
         if (coordenador.getCurso() != null) {
             this.cursoId = coordenador.getCurso().id;
             this.cursoNome = coordenador.getCurso().nome;

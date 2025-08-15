@@ -10,9 +10,9 @@ public class CoordenadorRequestDTO {
     @Size(max = 255, message = "O nome não pode exceder 255 caracteres.")
     public String nome;
 
-    @NotBlank(message = "A matrícula do coordenador é obrigatória.")
-    @Size(max = 20, message = "A matrícula não pode exceder 20 caracteres.")
-    public String matricula;
+    @NotBlank(message = "O registro do coordenador é obrigatória.")
+    @Size(max = 20, message = "O registro não pode exceder 20 caracteres.")
+    public String registro;
 
     @NotNull(message = "O ID do curso é obrigatório.")
     public Long cursoId;
@@ -20,16 +20,16 @@ public class CoordenadorRequestDTO {
     // Construtores, Getters e Setters
     public CoordenadorRequestDTO() {}
 
-    public CoordenadorRequestDTO(String nome, String matricula, Long cursoId) {
+    public CoordenadorRequestDTO(String nome, String registro, Long cursoId) {
         this.nome = nome;
-        this.matricula = matricula;
+        this.registro = registro;
         this.cursoId = cursoId;
     }
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
-    public String getMatricula() { return matricula; }
-    public void setMatricula(String matricula) { this.matricula = matricula; }
+    public String getRegistro() { return registro; }
+    public void setRegistro(String registro) { this.registro = registro; }
     public Long getCursoId() { return cursoId; }
     public void setCursoId(Long cursoId) { this.cursoId = cursoId; }
 }

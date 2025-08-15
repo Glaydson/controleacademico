@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { OidcSecurityService, AuthenticatedResult } from 'angular-auth-oidc-client';
 import { Usuario, CreateUsuarioRequest, UpdateUsuarioRequest } from '../models/usuario.model';
 import { UsuarioService } from '../services/usuario.service';
+import { CursoService } from '../services/curso';
+import { Curso } from '../models/curso.model';
 
 @Component({
   selector: 'app-gerenciar-usuarios',
@@ -12,6 +14,7 @@ import { UsuarioService } from '../services/usuario.service';
 })
 export class GerenciarUsuariosComponent implements OnInit {
   usuarios: Usuario[] = [];
+  cursos: Curso[] = [];
   isLoading = false;
   isCreating = false;
   isEditing = false;
@@ -33,6 +36,7 @@ export class GerenciarUsuariosComponent implements OnInit {
 
   constructor(
     private usuarioService: UsuarioService,
+    private cursoService: CursoService,
     private router: Router,
     private oidcSecurityService: OidcSecurityService
   ) {
@@ -55,6 +59,7 @@ export class GerenciarUsuariosComponent implements OnInit {
             // Add another small delay to ensure everything is ready
             setTimeout(() => {
               this.loadUsuarios();
+              this.loadCursos();
             }, 200);
           } else {
             console.log('❌ [GERENCIAR-USUARIOS] Usuário não autenticado');
@@ -115,6 +120,21 @@ export class GerenciarUsuariosComponent implements OnInit {
     });
   }
 
+  loadCursos(): void {
+    console.log('📚 [GERENCIAR-USUARIOS] Carregando cursos...');
+    
+    this.cursoService.getCursos().subscribe({
+      next: (cursos) => {
+        console.log('✅ [GERENCIAR-USUARIOS] Cursos carregados:', cursos);
+        this.cursos = cursos;
+      },
+      error: (error) => {
+        console.error('❌ [GERENCIAR-USUARIOS] Erro ao carregar cursos:', error);
+        // Non-blocking error - users can still be managed without courses loaded
+      }
+    });
+  }
+
   startCreating(): void {
     console.log('➕ [GERENCIAR-USUARIOS] Iniciando criação de usuário');
     this.isCreating = true;
@@ -137,7 +157,8 @@ export class GerenciarUsuariosComponent implements OnInit {
       email: usuario.email,
       matricula: usuario.matricula,
       password: '', // Don't populate password for editing
-      role: usuario.role
+      role: usuario.role,
+      cursoId: usuario.cursoId // Include curso for editing
     };
   }
 
@@ -152,6 +173,12 @@ export class GerenciarUsuariosComponent implements OnInit {
 
   submitForm(): void {
     console.log('💾 [GERENCIAR-USUARIOS] Submetendo formulário:', this.formData);
+    
+    // Validate course requirement for COORDENADOR and ALUNO
+    if (this.isRoleRequiresCurso(this.formData.role) && !this.formData.cursoId) {
+      this.errorMessage = `Curso é obrigatório para ${this.formData.role === 'COORDENADOR' ? 'Coordenadores' : 'Alunos'}.`;
+      return;
+    }
     
     if (this.isCreating) {
       this.createUsuario();
@@ -207,20 +234,28 @@ export class GerenciarUsuariosComponent implements OnInit {
     this.isLoading = true;
     this.clearMessages();
     
-    const updateData: UpdateUsuarioRequest = {
-      id: usuario.id,
+    // Don't include ID in the request body since it's in the URL path
+    const updateData: any = {
       nome: this.formData.nome,
       email: this.formData.email,
       matricula: this.formData.matricula,
-      role: this.formData.role
+      role: this.formData.role,
+      password: this.formData.password || '' // Include password if provided
     };
     
+    // Only include cursoId if it has a valid value
+    if (this.formData.cursoId && this.formData.cursoId > 0) {
+      updateData.cursoId = this.formData.cursoId;
+    }
+    
     console.log('✏️ [GERENCIAR-USUARIOS] Atualizando usuário:', updateData);
+    console.log('✏️ [GERENCIAR-USUARIOS] Update data being sent:', JSON.stringify(updateData, null, 2));
     
     this.usuarioService.updateUsuario(usuario.id, updateData).subscribe({
-      next: (usuarioAtualizado) => {
-        console.log('✅ [GERENCIAR-USUARIOS] Usuário atualizado:', usuarioAtualizado);
-        this.usuarios[usuarioIndex] = usuarioAtualizado;
+      next: (response) => {
+        console.log('✅ [GERENCIAR-USUARIOS] Usuário atualizado:', response);
+        // Since backend returns success message, reload users to get updated data
+        this.loadUsuarios();
         this.successMessage = 'Usuário atualizado com sucesso!';
         this.cancelForm();
         this.isLoading = false;
@@ -228,7 +263,16 @@ export class GerenciarUsuariosComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ [GERENCIAR-USUARIOS] Erro ao atualizar usuário:', error);
-        this.errorMessage = 'Erro ao atualizar usuário. Tente novamente.';
+        console.error('❌ [GERENCIAR-USUARIOS] Error details:', error.error);
+        console.error('❌ [GERENCIAR-USUARIOS] Status:', error.status);
+        console.error('❌ [GERENCIAR-USUARIOS] StatusText:', error.statusText);
+        console.error('❌ [GERENCIAR-USUARIOS] URL:', error.url);
+        
+        if (error.error && error.error.message) {
+          this.errorMessage = `Erro ao atualizar usuário: ${error.error.message}`;
+        } else {
+          this.errorMessage = 'Erro ao atualizar usuário. Tente novamente.';
+        }
         this.isLoading = false;
       }
     });
@@ -277,23 +321,46 @@ export class GerenciarUsuariosComponent implements OnInit {
       return;
     }
 
+    // Validate course requirement for COORDENADOR and ALUNO
+    if (this.isRoleRequiresCurso(this.editingUsuario.role) && !this.editingUsuario.cursoId) {
+      this.errorMessage = `Curso é obrigatório para ${this.editingUsuario.role === 'COORDENADOR' ? 'Coordenadores' : 'Alunos'}.`;
+      return;
+    }
+
     console.log('💾 [GERENCIAR-USUARIOS] Salvando edição inline:', this.editingUsuario);
+    console.log('💾 [GERENCIAR-USUARIOS] User ID being sent:', this.editingUsuario.id);
+    console.log('💾 [GERENCIAR-USUARIOS] User ID type:', typeof this.editingUsuario.id);
     
-    const updateData: UpdateUsuarioRequest = {
+    // Don't include ID in the request body since it's in the URL path
+    const updateData: any = {
+      nome: this.editingUsuario.nome,
+      email: this.editingUsuario.email,
+      matricula: this.editingUsuario.matricula,
+      role: this.editingUsuario.role,
+      password: '' // Backend might require password field even for updates
+    };
+    
+    // Only include cursoId if it has a valid value
+    if (this.editingUsuario.cursoId && this.editingUsuario.cursoId > 0) {
+      updateData.cursoId = this.editingUsuario.cursoId;
+    }
+    
+    console.log('💾 [GERENCIAR-USUARIOS] Update data being sent:', JSON.stringify(updateData, null, 2));
+    console.log('💾 [GERENCIAR-USUARIOS] Original user data from backend:', {
       id: this.editingUsuario.id,
       nome: this.editingUsuario.nome,
       email: this.editingUsuario.email,
       matricula: this.editingUsuario.matricula,
-      role: this.editingUsuario.role
-    };
+      role: this.editingUsuario.role,
+      cursoId: this.editingUsuario.cursoId,
+      cursoNome: this.editingUsuario.cursoNome
+    });
     
     this.usuarioService.updateUsuario(this.editingUsuario.id, updateData).subscribe({
-      next: (usuarioAtualizado) => {
-        console.log('✅ [GERENCIAR-USUARIOS] Usuário atualizado via inline edit:', usuarioAtualizado);
-        const index = this.usuarios.findIndex(u => u.id === this.editingUsuario!.id);
-        if (index !== -1) {
-          this.usuarios[index] = usuarioAtualizado;
-        }
+      next: (response) => {
+        console.log('✅ [GERENCIAR-USUARIOS] Usuário atualizado via inline edit:', response);
+        // Since backend returns success message, reload users to get updated data
+        this.loadUsuarios();
         this.editingUsuario = null;
         this.originalEditingData = null;
         this.successMessage = 'Usuário atualizado com sucesso!';
@@ -301,7 +368,16 @@ export class GerenciarUsuariosComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ [GERENCIAR-USUARIOS] Erro ao atualizar usuário via inline edit:', error);
-        this.errorMessage = 'Erro ao atualizar usuário. Tente novamente.';
+        console.error('❌ [GERENCIAR-USUARIOS] Error details:', error.error);
+        console.error('❌ [GERENCIAR-USUARIOS] Status:', error.status);
+        console.error('❌ [GERENCIAR-USUARIOS] StatusText:', error.statusText);
+        console.error('❌ [GERENCIAR-USUARIOS] URL:', error.url);
+        
+        if (error.error && error.error.message) {
+          this.errorMessage = `Erro ao atualizar usuário: ${error.error.message}`;
+        } else {
+          this.errorMessage = 'Erro ao atualizar usuário. Tente novamente.';
+        }
         this.cancelInlineEdit();
       }
     });
@@ -320,7 +396,8 @@ export class GerenciarUsuariosComponent implements OnInit {
       email: '',
       matricula: '',
       password: '',
-      role: 'ALUNO'
+      role: 'ALUNO',
+      cursoId: undefined
     };
   }
 
@@ -349,6 +426,38 @@ export class GerenciarUsuariosComponent implements OnInit {
       case 'PROFESSOR': return 'Professor';
       case 'ALUNO': return 'Aluno';
       default: return role;
+    }
+  }
+
+  getCursoNome(usuario: Usuario): string {
+    // If cursoNome is already provided in the response, use it
+    if (usuario.cursoNome) {
+      return usuario.cursoNome;
+    }
+    
+    // If no cursoId, show dash
+    if (!usuario.cursoId) {
+      return '-';
+    }
+    
+    // Fallback: try to find in cursos array
+    const curso = this.cursos.find(c => c.id === usuario.cursoId);
+    if (curso) {
+      return curso.nome;
+    }
+    
+    // Last resort: show ID with not found message
+    return `Curso não encontrado (ID: ${usuario.cursoId})`;
+  }
+
+  isRoleRequiresCurso(role: string): boolean {
+    return role === 'COORDENADOR' || role === 'ALUNO';
+  }
+
+  onRoleChange(): void {
+    // Clear course selection if role doesn't require course
+    if (!this.isRoleRequiresCurso(this.formData.role)) {
+      this.formData.cursoId = undefined;
     }
   }
 

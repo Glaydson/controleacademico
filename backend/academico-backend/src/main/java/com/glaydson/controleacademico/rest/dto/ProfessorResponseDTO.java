@@ -16,7 +16,7 @@ public class ProfessorResponseDTO {
     public ProfessorResponseDTO(Professor professor) {
         this.id = professor.id;
         this.nome = professor.nome;
-        this.matricula = professor.matricula;
+        this.matricula = professor.getRegistro();
         if (professor.disciplinas != null) {
             this.disciplinas = professor.disciplinas.stream()
                     .map(DisciplinaResponseDTO::new)

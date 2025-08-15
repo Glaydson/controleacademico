@@ -39,8 +39,8 @@ public class CoordenadorService {
 
     @Transactional
     public Coordenador criarCoordenador(CoordenadorRequestDTO coordenadorDto) { // Recebe o DTO
-        if (coordenadorRepository.find("matricula", coordenadorDto.matricula).count() > 0) {
-            throw new BadRequestException("Já existe um coordenador com a matrícula " + coordenadorDto.matricula);
+        if (coordenadorRepository.find("matricula", coordenadorDto.getRegistro()).count() > 0) {
+            throw new BadRequestException("Já existe um coordenador com a matrícula " + coordenadorDto.getRegistro());
         }
 
         // Valida se o curso já tem um coordenador
@@ -54,7 +54,7 @@ public class CoordenadorService {
 
         Coordenador coordenador = new Coordenador(); // Cria a entidade
         coordenador.nome = coordenadorDto.nome;
-        coordenador.matricula = coordenadorDto.matricula;
+        coordenador.registro = coordenadorDto.getRegistro();
         coordenador.curso = cursoExistente; // Associa a entidade Curso gerenciada
 
         coordenadorRepository.persist(coordenador);
@@ -67,13 +67,13 @@ public class CoordenadorService {
                 .orElseThrow(() -> new NotFoundException("Coordenador com ID " + id + NAO_ENCONTRADO));
 
         // Validação de unicidade para matrícula (se alterada)
-        if (!coordenadorExistente.matricula.equals(coordenadorDto.matricula) &&
-                coordenadorRepository.find("matriculaFuncional", coordenadorDto.matricula).count() > 0) {
-            throw new BadRequestException("Já existe outro coordenador com a matrícula " + coordenadorDto.matricula);
+        if (!coordenadorExistente.getRegistro().equals(coordenadorDto.getRegistro()) &&
+                coordenadorRepository.find("matriculaFuncional", coordenadorDto.getRegistro()).count() > 0) {
+            throw new BadRequestException("Já existe outro coordenador com o registro " + coordenadorDto.getRegistro());
         }
 
         coordenadorExistente.nome = coordenadorDto.nome;
-        coordenadorExistente.matricula = coordenadorDto.matricula;
+        coordenadorExistente.registro = coordenadorDto.getRegistro();
 
         // Lógica de atualização de curso
         if (coordenadorDto.cursoId != null) {

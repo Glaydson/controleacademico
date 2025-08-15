@@ -18,6 +18,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @ApplicationScoped
@@ -136,7 +137,7 @@ public class UserService {
     }
 
     @Transactional
-    public void createUser(UserCreateRequestDTO requestDTO) {
+    public UserResponseDTO createUser(UserCreateRequestDTO requestDTO) {
         // Validate business logic FIRST, before initializing Keycloak
         validateUserRequest(requestDTO);
 
@@ -191,6 +192,42 @@ public class UserService {
             // Save user locally based on role
             saveLocalUser(requestDTO, userId);
 
+            // Create and return UserResponseDTO with the created user data
+            UserResponseDTO userResponse = new UserResponseDTO();
+            userResponse.setId(userId);
+            userResponse.setNome(requestDTO.getNome());
+            userResponse.setEmail(requestDTO.getEmail());
+            userResponse.setMatricula(requestDTO.getMatricula());
+            userResponse.setRole(requestDTO.getRole());
+            userResponse.setEnabled(true);
+
+            // Set role-specific data
+            switch (requestDTO.getRole().toUpperCase()) {
+                case "ALUNO":
+                case "COORDENADOR":
+                    if (requestDTO.getCursoId() != null) {
+                        userResponse.setCursoId(requestDTO.getCursoId());
+                        var curso = cursoRepository.findByIdOptional(requestDTO.getCursoId());
+                        if (curso.isPresent()) {
+                            userResponse.setCursoNome(((com.glaydson.controleacademico.domain.model.Curso) curso.get()).nome);
+                        }
+                    }
+                    break;
+                case "PROFESSOR":
+                    if (requestDTO.getDisciplinaIds() != null && !requestDTO.getDisciplinaIds().isEmpty()) {
+                        userResponse.setDisciplinaIds(requestDTO.getDisciplinaIds());
+                        var disciplinas = disciplinaRepository.list("id in ?1", requestDTO.getDisciplinaIds());
+                        if (!disciplinas.isEmpty()) {
+                            userResponse.setDisciplinaNomes(disciplinas.stream()
+                                .map(d -> ((com.glaydson.controleacademico.domain.model.Disciplina) d).nome)
+                                .collect(java.util.stream.Collectors.toSet()));
+                        }
+                    }
+                    break;
+            }
+
+            return userResponse;
+
         } finally {
             if (keycloak != null) {
                 keycloak.close();
@@ -227,13 +264,13 @@ public class UserService {
                 }
                 break;
             case "PROFESSOR":
-                if (requestDTO.getDisciplinaIds() == null || requestDTO.getDisciplinaIds().isEmpty()) {
-                    throw new WebApplicationException("Disciplina IDs are required for PROFESSOR", Response.Status.BAD_REQUEST);
-                }
-                // Validate that all disciplines exist
-                for (Long disciplinaId : requestDTO.getDisciplinaIds()) {
-                    if (!disciplinaRepository.findByIdOptional(disciplinaId).isPresent()) {
-                        throw new WebApplicationException("Disciplina not found: " + disciplinaId, Response.Status.BAD_REQUEST);
+                // Disciplinas are now optional for Professor creation
+                // If disciplinaIds are provided, validate that all disciplines exist
+                if (requestDTO.getDisciplinaIds() != null && !requestDTO.getDisciplinaIds().isEmpty()) {
+                    for (Long disciplinaId : requestDTO.getDisciplinaIds()) {
+                        if (!disciplinaRepository.findByIdOptional(disciplinaId).isPresent()) {
+                            throw new WebApplicationException("Disciplina not found: " + disciplinaId, Response.Status.BAD_REQUEST);
+                        }
                     }
                 }
                 break;
@@ -273,15 +310,17 @@ public class UserService {
     private void createAluno(UserCreateRequestDTO dto, String keycloakId) {
         Curso curso = cursoRepository.findByIdOptional(dto.getCursoId())
                 .orElseThrow(() -> new WebApplicationException("Curso not found", Response.Status.BAD_REQUEST));
-        Aluno aluno = new Aluno(dto.getNome(), dto.getMatricula(), curso);
-        aluno.keycloakId = keycloakId;
+        Aluno aluno = new Aluno(dto.getNome(), dto.getMatricula(), curso, keycloakId);
         aluno.persist();
     }
 
     private void createProfessor(UserCreateRequestDTO dto, String keycloakId) {
-        Set<Disciplina> disciplinas = new HashSet<>(disciplinaRepository.list("id in ?1", dto.getDisciplinaIds()));
-        Professor professor = new Professor(dto.getNome(), dto.getMatricula(), disciplinas);
-        professor.keycloakId = keycloakId;
+        // Handle optional disciplinas - create empty set if none provided
+        Set<Disciplina> disciplinas = new HashSet<>();
+        if (dto.getDisciplinaIds() != null && !dto.getDisciplinaIds().isEmpty()) {
+            disciplinas = new HashSet<>(disciplinaRepository.list("id in ?1", dto.getDisciplinaIds()));
+        }
+        Professor professor = new Professor(dto.getNome(), dto.getMatricula(), disciplinas, keycloakId);
         professor.persist();
     }
 
@@ -291,14 +330,13 @@ public class UserService {
         }
         Curso curso = cursoRepository.findByIdOptional(dto.getCursoId())
                 .orElseThrow(() -> new WebApplicationException("Curso not found", Response.Status.BAD_REQUEST));
-        Coordenador coordenador = new Coordenador(dto.getNome(), dto.getMatricula(), curso);
-        coordenador.keycloakId = keycloakId;
+        Coordenador coordenador = new Coordenador(dto.getNome(), dto.getMatricula(), curso, keycloakId);
         coordenador.persist();
     }
 
     // New methods for user management
 
-    public java.util.List<UserResponseDTO> getAllUsers() {
+    public List<UserResponseDTO> getAllUsers() {
         System.out.println("=== getAllUsers() called ===");
         System.out.println("Server URL: " + serverUrl);
         System.out.println("Realm: " + realm);
@@ -470,6 +508,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void updateUser(String id, UserCreateRequestDTO requestDTO) {
         Keycloak keycloak = null;
         try {
@@ -505,6 +544,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void deleteUser(String id) {
         Keycloak keycloak = null;
         try {
@@ -523,7 +563,7 @@ public class UserService {
         }
     }
 
-    private void populateLocalUserData(com.glaydson.controleacademico.rest.dto.UserResponseDTO userDto) {
+    private void populateLocalUserData(UserResponseDTO userDto) {
         String role = userDto.getRole();
         String keycloakId = userDto.getId();
         
@@ -542,7 +582,7 @@ public class UserService {
                 case "PROFESSOR":
                     var professor = Professor.find("keycloakId", keycloakId).firstResult();
                     if (professor != null) {
-                        userDto.setMatricula(((Professor) professor).matricula);
+                        userDto.setMatricula(((Professor) professor).getRegistro());
                         if (((Professor) professor).disciplinas != null) {
                             userDto.setDisciplinaIds(((Professor) professor).disciplinas.stream()
                                 .map(d -> d.id).collect(java.util.stream.Collectors.toSet()));
@@ -554,7 +594,7 @@ public class UserService {
                 case "COORDENADOR":
                     var coordenador = Coordenador.find("keycloakId", keycloakId).firstResult();
                     if (coordenador != null) {
-                        userDto.setMatricula(((Coordenador) coordenador).matricula);
+                        userDto.setMatricula(((Coordenador) coordenador).getRegistro());
                         if (((Coordenador) coordenador).curso != null) {
                             userDto.setCursoId(((Coordenador) coordenador).curso.id);
                             userDto.setCursoNome(((Coordenador) coordenador).curso.nome);
@@ -649,6 +689,119 @@ public class UserService {
         } catch (Exception e) {
             System.err.println("=== ERROR in getAvailableAdminRoles(): " + e.getMessage());
             return java.util.Arrays.asList("Error: " + e.getMessage());
+        } finally {
+            if (keycloak != null) {
+                keycloak.close();
+            }
+        }
+    }
+
+    @Transactional
+    public void syncKeycloakUsersToBackend() {
+        System.out.println("=== Starting Keycloak to Backend user sync ===");
+
+        Keycloak keycloak = null;
+        try {
+            keycloak = getKeycloakAdminClient();
+            var allUsers = keycloak.realm(realm).users().list();
+            java.util.Set<String> relevantRoles = java.util.Set.of("COORDENADOR", "ALUNO", "PROFESSOR", "ADMIN");
+
+            int syncedCount = 0;
+            int skippedCount = 0;
+
+            for (org.keycloak.representations.idm.UserRepresentation user : allUsers) {
+                try {
+                    // Get user roles
+                    var realmRoles = keycloak.realm(realm).users().get(user.getId()).roles().realmLevel().listEffective();
+                    String userRole = null;
+
+                    for (var role : realmRoles) {
+                        if (relevantRoles.contains(role.getName())) {
+                            userRole = role.getName();
+                            break;
+                        }
+                    }
+
+                    if (userRole != null && !userRole.equals("ADMIN")) {
+                        // Check if user already exists in backend database
+                        boolean existsInBackend = false;
+                        switch (userRole.toUpperCase()) {
+                            case "ALUNO":
+                                existsInBackend = Aluno.find("keycloakId", user.getId()).firstResult() != null;
+                                break;
+                            case "PROFESSOR":
+                                existsInBackend = Professor.find("keycloakId", user.getId()).firstResult() != null;
+                                break;
+                            case "COORDENADOR":
+                                existsInBackend = Coordenador.find("keycloakId", user.getId()).firstResult() != null;
+                                break;
+                        }
+
+                        if (!existsInBackend) {
+                            System.out.println("Syncing user: " + user.getUsername() + " (" + userRole + ")");
+
+                            // Create minimal user data - you'll need to update these manually later
+                            switch (userRole.toUpperCase()) {
+                                case "ALUNO":
+                                    // Create with default course (you'll need to update this)
+                                    var firstCourse = Curso.findAll().firstResult();
+                                    if (firstCourse != null) {
+                                        String nome = user.getFirstName() != null ? user.getFirstName() : user.getUsername();
+                                        String matricula = "SYNC_" + user.getUsername(); // Temporary matricula
+
+                                        Aluno aluno = new Aluno(nome, matricula, (Curso) firstCourse, user.getId());
+
+                                        System.out.println("Persisting aluno with data: Nome: " + aluno.nome + ", Matricula: " + aluno.matricula + ", Curso: " + aluno.curso.nome + ", KeycloakId: " + aluno.keycloakId);
+                                        aluno.persist();
+                                        syncedCount++;
+                                    } else {
+                                        System.err.println("Cannot sync ALUNO - no courses found in database");
+                                        skippedCount++;
+                                    }
+                                    break;
+
+                                case "PROFESSOR":
+                                    String professorNome = user.getFirstName() != null ? user.getFirstName() : user.getUsername();
+                                    String professorMatricula = "SYNC_" + user.getUsername(); // Temporary matricula
+
+                                    Professor professor = new Professor(professorNome, professorMatricula, null, user.getId());
+                                    System.out.println("Persisting professor with data: Nome: " + professor.nome + ", Registro: " + professor.getRegistro() + ", KeycloakId: " + professor.keycloakId);
+                                    professor.persist();
+                                    syncedCount++;
+                                    break;
+
+                                case "COORDENADOR":
+                                    var firstCourseCoord = Curso.findAll().firstResult();
+                                    if (firstCourseCoord != null) {
+                                        String coordenadorNome = user.getFirstName() != null ? user.getFirstName() : user.getUsername();
+                                        String coordenadorMatricula = "SYNC_" + user.getUsername(); // Temporary matricula
+
+                                        Coordenador coordenador = new Coordenador(coordenadorNome, coordenadorMatricula, (Curso) firstCourseCoord, user.getId());
+                                        System.out.println("Persisting coordenador with data: Nome: " + coordenador.nome + ", Registro: " + coordenador.getRegistro() + ", Curso: " + coordenador.curso.nome + ", KeycloakId: " + coordenador.keycloakId);
+                                        coordenador.persist();
+                                        syncedCount++;
+                                    } else {
+                                        System.err.println("Cannot sync COORDENADOR - no courses found in database");
+                                        skippedCount++;
+                                    }
+                                    break;
+                            }
+                        } else {
+                            System.out.println("User already exists in backend: " + user.getUsername());
+                            skippedCount++;
+                        }
+                    } else {
+                        System.out.println("Skipping user with no relevant role: " + user.getUsername());
+                        skippedCount++;
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error syncing user " + user.getUsername() + ": " + e.getMessage());
+                    skippedCount++;
+                }
+            }
+
+            System.out.println("=== Sync completed: " + syncedCount + " users synced, " + skippedCount + " skipped ===");
+
         } finally {
             if (keycloak != null) {
                 keycloak.close();

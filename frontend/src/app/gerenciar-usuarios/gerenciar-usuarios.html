@@ -83,6 +83,7 @@
             #role="ngModel"
             class="form-control"
             [class.error]="role.invalid && role.touched"
+            (change)="onRoleChange()"
           >
             <option value="">Selecione uma função</option>
             <option value="COORDENADOR">Coordenador</option>
@@ -91,6 +92,54 @@
           </select>
           <div *ngIf="role.invalid && role.touched" class="error-message">
             Função é obrigatória
+          </div>
+        </div>
+      </div>
+
+      <!-- Curso selection (only for COORDENADOR and ALUNO) -->
+      <div *ngIf="isRoleRequiresCurso(formData.role)" class="form-row">
+        <div class="form-group">
+          <label for="curso">Curso *</label>
+          <select 
+            id="curso" 
+            name="cursoId"
+            [(ngModel)]="formData.cursoId" 
+            required 
+            #curso="ngModel"
+            class="form-control"
+            [class.error]="curso.invalid && curso.touched"
+          >
+            <option value="">Selecione um curso</option>
+            <option *ngFor="let curso of cursos" [value]="curso.id">
+              {{ curso.nome }}
+            </option>
+          </select>
+          <div *ngIf="curso.invalid && curso.touched" class="error-message">
+            Curso é obrigatório para {{ getRoleLabel(formData.role) }}
+          </div>
+        </div>        <!-- Course selection for COORDENADOR and ALUNO -->
+        <div *ngIf="isRoleRequiresCurso(formData.role)" class="form-group">
+          <label for="cursoId">
+            Curso *
+            <span *ngIf="formData.role === 'COORDENADOR'">(Curso a coordenar)</span>
+            <span *ngIf="formData.role === 'ALUNO'">(Curso matriculado)</span>
+          </label>
+          <select 
+            id="cursoId" 
+            name="cursoId"
+            [(ngModel)]="formData.cursoId" 
+            required 
+            #cursoId="ngModel"
+            class="form-control"
+            [class.error]="cursoId.invalid && cursoId.touched"
+          >
+            <option value="">Selecione um curso</option>
+            <option *ngFor="let curso of cursos" [value]="curso.id">
+              {{ curso.nome }}
+            </option>
+          </select>
+          <div *ngIf="cursoId.invalid && cursoId.touched" class="error-message">
+            Curso é obrigatório para {{ formData.role === 'COORDENADOR' ? 'Coordenadores' : 'Alunos' }}
           </div>
         </div>
       </div>
@@ -157,6 +206,7 @@
         <div class="grid-cell">Email</div>
         <div class="grid-cell">Matrícula</div>
         <div class="grid-cell">Função</div>
+        <div class="grid-cell">Curso</div>
         <div class="grid-cell actions-header">Ações</div>
       </div>
 
@@ -185,20 +235,31 @@
               {{ getRoleLabel(usuario.role) }}
             </span>
           </div>
+          <div class="grid-cell">
+            <span class="label mobile-only">Curso:</span>
+            <span *ngIf="usuario.cursoId || usuario.cursoNome; else noCurso">
+              {{ getCursoNome(usuario) }}
+            </span>
+            <ng-template #noCurso>
+              <span class="text-muted">-</span>
+            </ng-template>
+          </div>
           <div class="grid-cell actions">
             <button 
-              class="btn btn-sm btn-outline" 
+              class="btn btn-primary btn-action" 
               (click)="startInlineEdit(usuario)"
               title="Editar usuário"
             >
               <i class="fas fa-edit"></i>
+              <span class="btn-text">Editar</span>
             </button>
             <button 
-              class="btn btn-sm btn-danger" 
+              class="btn btn-danger btn-action" 
               (click)="deleteUsuario(usuario)"
               title="Excluir usuário"
             >
               <i class="fas fa-trash"></i>
+              <span class="btn-text">Excluir</span>
             </button>
           </div>
         </ng-container>
@@ -239,20 +300,37 @@
               <option value="ALUNO">Aluno</option>
             </select>
           </div>
+          <div class="grid-cell">
+            <select 
+              *ngIf="isRoleRequiresCurso(editingUsuario.role); else noInlineCurso"
+              [(ngModel)]="editingUsuario.cursoId" 
+              class="form-control inline-edit"
+            >
+              <option value="">Selecione um curso</option>
+              <option *ngFor="let curso of cursos" [value]="curso.id">
+                {{ curso.nome }}
+              </option>
+            </select>
+            <ng-template #noInlineCurso>
+              <span class="text-muted">-</span>
+            </ng-template>
+          </div>
           <div class="grid-cell actions">
             <button 
-              class="btn btn-sm btn-success" 
+              class="btn btn-success btn-action" 
               (click)="saveInlineEdit()"
               title="Salvar alterações"
             >
               <i class="fas fa-check"></i>
+              <span class="btn-text">Salvar</span>
             </button>
             <button 
-              class="btn btn-sm btn-secondary" 
+              class="btn btn-secondary btn-action" 
               (click)="cancelInlineEdit()"
               title="Cancelar edição"
             >
               <i class="fas fa-times"></i>
+              <span class="btn-text">Cancelar</span>
             </button>
           </div>
         </ng-container>

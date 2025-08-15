@@ -123,7 +123,7 @@ class UserResourceTest {
                 Professor createdProfessor = Professor.find("matricula", "PROF001").firstResult();
                 assertNotNull(createdProfessor);
                 assertEquals("Maria Santos", createdProfessor.nome);
-                assertEquals("PROF001", createdProfessor.matricula);
+                assertEquals("PROF001", createdProfessor.getRegistro());
                 assertEquals(2, createdProfessor.disciplinas.size());
             } else {
                 // Log the error for debugging but don't fail the test
@@ -165,7 +165,7 @@ class UserResourceTest {
                 Coordenador createdCoordenador = Coordenador.find("matricula", "COORD001").firstResult();
                 assertNotNull(createdCoordenador);
                 assertEquals("Carlos Oliveira", createdCoordenador.nome);
-                assertEquals("COORD001", createdCoordenador.matricula);
+                assertEquals("COORD001", createdCoordenador.getRegistro());
                 assertEquals(testCurso.id, createdCoordenador.curso.id);
             } else {
                 // Log the error for debugging but don't fail the test

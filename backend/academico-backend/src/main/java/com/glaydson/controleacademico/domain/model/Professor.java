@@ -10,6 +10,9 @@ import java.util.Set;
 @DiscriminatorValue("PROFESSOR") // Valor para a coluna 'tipo_pessoa'
 public class Professor extends Pessoa { // Agora Professor estende Pessoa
 
+    @Column(nullable = false, unique = true)
+    private String registro;
+
     @ManyToMany(cascade = {jakarta.persistence.CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(name = "professor_disciplina",
             joinColumns = @jakarta.persistence.JoinColumn(name = "professor_id"),
@@ -19,8 +22,9 @@ public class Professor extends Pessoa { // Agora Professor estende Pessoa
     // Construtores
     public Professor() {}
 
-    public Professor(String nome, String matricula, Set<Disciplina> disciplinas) { // Construtor com email
-        super(nome, matricula); // Chama o construtor da superclasse Pessoa
+    public Professor(String nome, String registro, Set<Disciplina> disciplinas, String keycloakId) { // Construtor com email
+        super(nome, keycloakId); // Chama o construtor da superclasse Pessoa
+        this.registro = registro;
         this.disciplinas = disciplinas;
     }
 
@@ -28,5 +32,11 @@ public class Professor extends Pessoa { // Agora Professor estende Pessoa
     public Set<Disciplina> getDisciplinas() { return disciplinas; }
     public void setDisciplinas(Set<Disciplina> disciplinas) { this.disciplinas = disciplinas; }
 
+    public String getRegistro() {
+        return registro;
+    }
 
+    public void setRegistro(String registro) {
+        this.registro = registro;
+    }
 }

@@ -197,6 +197,24 @@
   font-size: 0.875rem;
 }
 
+.btn-action {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 90px;
+  justify-content: center;
+}
+
+.btn-action .btn-text {
+  font-weight: 500;
+}
+
+.btn-action i {
+  font-size: 0.875rem;
+}
+
 .btn-close {
   background: none;
   border: none;
@@ -270,7 +288,7 @@
 /* Grid Layout */
 .usuarios-grid {
   display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1fr auto;
+  grid-template-columns: 2fr 2fr 1fr 1fr 1.5fr 200px;
   gap: 1rem;
 }
 
@@ -311,28 +329,35 @@
   background: #fef3c7;
 }
 
-/* Role Badge */
+/* Role badges */
 .role-badge {
+  display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 .role-coordenador {
-  background: #dbeafe;
-  color: #1e40af;
+  background: linear-gradient(45deg, #8b5cf6, #a855f7);
+  color: white;
 }
 
 .role-professor {
-  background: #ecfdf5;
-  color: #065f46;
+  background: linear-gradient(45deg, #3b82f6, #2563eb);
+  color: white;
 }
 
 .role-aluno {
-  background: #fef3c7;
-  color: #92400e;
+  background: linear-gradient(45deg, #10b981, #059669);
+  color: white;
+}
+
+/* Course info styling */
+.text-muted {
+  color: #6b7280;
+  font-style: italic;
 }
 
 /* Actions */
@@ -474,15 +499,51 @@
     padding: 1rem;
   }
 
-  .actions {
-    flex-direction: column;
-    gap: 0.5rem;
+  .usuarios-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 
-  .btn {
+  .grid-row {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .grid-cell {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .grid-cell:last-child {
+    border-bottom: none;
+  }
+
+  .actions {
+    flex-direction: row;
+    gap: 0.5rem;
     justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .btn-action {
+    min-width: auto;
+    flex: 1;
   }
 }
+
+/* Hide button text on very small screens */
+@media (max-width: 360px) {
+  .btn-action .btn-text {
+    display: none;
+  }
+  
+  .btn-action {
+    min-width: 60px;
+  }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {

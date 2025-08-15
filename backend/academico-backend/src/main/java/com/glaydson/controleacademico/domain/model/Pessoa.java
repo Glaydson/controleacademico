@@ -4,9 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "pessoa", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"matricula"}) // Matrícula deve ser única para todas as Pessoas
-})
+@Table(name = "pessoa") // Removed the invalid unique constraint on matricula
 @Inheritance(strategy = InheritanceType.JOINED) // Estratégia de herança JOINED
 @DiscriminatorColumn(name = "tipo_pessoa", discriminatorType = DiscriminatorType.STRING) // Coluna para identificar o tipo
 @SequenceGenerator(name = "pessoa_seq", sequenceName = "pessoa_seq", allocationSize = 1)
@@ -19,9 +17,6 @@ public abstract class Pessoa extends PanacheEntityBase {
     @Column(nullable = false)
     public String nome;
 
-    @Column(nullable = false, unique = true)
-    public String matricula;
-
     @Column(name = "keycloak_id", unique = true)
     public String keycloakId;
 
@@ -29,9 +24,9 @@ public abstract class Pessoa extends PanacheEntityBase {
     // Construtores, getters e setters
     public Pessoa() {}
 
-    public Pessoa(String nome, String matricula) {
+    public Pessoa(String nome, String keycloakId) {
         this.nome = nome;
-        this.matricula = matricula;
+        this.keycloakId = keycloakId;
     }
 
     // Getters e Setters
@@ -49,14 +44,6 @@ public abstract class Pessoa extends PanacheEntityBase {
 
     public void setNome(String nome) {
         this.nome = nome;
-    }
-
-    public String getMatricula() {
-        return matricula;
-    }
-
-    public void setMatricula(String matricula) {
-        this.matricula = matricula;
     }
 
     public String getKeycloakId() {
