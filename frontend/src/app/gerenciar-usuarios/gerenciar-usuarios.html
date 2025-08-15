@@ -1,1 +1,280 @@
-<p>gerenciar-usuarios works!</p>
+<div class="usuarios-container">
+  <div class="header">
+    <h1>Gerenciar Usuários</h1>
+    <button class="btn btn-primary" (click)="startCreating()">
+      <i class="fas fa-plus"></i>
+      Novo Usuário
+    </button>
+  </div>
+
+  <!-- Formulário de criação/edição -->
+  <div *ngIf="isCreating || isEditing" class="form-container">
+    <div class="form-header">
+      <h3>{{ isCreating ? 'Novo Usuário' : 'Editar Usuário' }}</h3>
+      <button class="btn btn-close" (click)="cancelForm()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <form (ngSubmit)="submitForm()" #usuarioForm="ngForm" class="usuario-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nome">Nome *</label>
+          <input 
+            type="text" 
+            id="nome" 
+            name="nome"
+            [(ngModel)]="formData.nome" 
+            required 
+            #nome="ngModel"
+            class="form-control"
+            [class.error]="nome.invalid && nome.touched"
+          >
+          <div *ngIf="nome.invalid && nome.touched" class="error-message">
+            Nome é obrigatório
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email"
+            [(ngModel)]="formData.email" 
+            required 
+            email
+            #email="ngModel"
+            class="form-control"
+            [class.error]="email.invalid && email.touched"
+          >
+          <div *ngIf="email.invalid && email.touched" class="error-message">
+            <span *ngIf="email.errors?.['required']">Email é obrigatório</span>
+            <span *ngIf="email.errors?.['email']">Email deve ter um formato válido</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="matricula">Matrícula *</label>
+          <input 
+            type="text" 
+            id="matricula" 
+            name="matricula"
+            [(ngModel)]="formData.matricula" 
+            required 
+            #matricula="ngModel"
+            class="form-control"
+            [class.error]="matricula.invalid && matricula.touched"
+          >
+          <div *ngIf="matricula.invalid && matricula.touched" class="error-message">
+            Matrícula é obrigatória
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="role">Função *</label>
+          <select 
+            id="role" 
+            name="role"
+            [(ngModel)]="formData.role" 
+            required 
+            #role="ngModel"
+            class="form-control"
+            [class.error]="role.invalid && role.touched"
+          >
+            <option value="">Selecione uma função</option>
+            <option value="COORDENADOR">Coordenador</option>
+            <option value="PROFESSOR">Professor</option>
+            <option value="ALUNO">Aluno</option>
+          </select>
+          <div *ngIf="role.invalid && role.touched" class="error-message">
+            Função é obrigatória
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="isCreating" class="form-row">
+        <div class="form-group">
+          <label for="password">Senha *</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password"
+            [(ngModel)]="formData.password" 
+            required 
+            #password="ngModel"
+            class="form-control"
+            [class.error]="password.invalid && password.touched"
+            minlength="6"
+          >
+          <div *ngIf="password.invalid && password.touched" class="error-message">
+            <span *ngIf="password.errors?.['required']">Senha é obrigatória</span>
+            <span *ngIf="password.errors?.['minlength']">Senha deve ter pelo menos 6 caracteres</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelForm()">
+          Cancelar
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary" 
+          [disabled]="usuarioForm.invalid || isLoading"
+        >
+          <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+          {{ isCreating ? 'Criar Usuário' : 'Salvar Alterações' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading && !isCreating && !isEditing" class="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    Carregando usuários...
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!isLoading && usuarios.length === 0 && !isCreating" class="empty-state">
+    <i class="fas fa-users"></i>
+    <h3>Nenhum usuário encontrado</h3>
+    <p>Comece criando seu primeiro usuário.</p>
+    <button class="btn btn-primary" (click)="startCreating()">
+      <i class="fas fa-plus"></i>
+      Criar Primeiro Usuário
+    </button>
+  </div>
+
+  <!-- Lista de usuários -->
+  <div *ngIf="!isLoading && usuarios.length > 0" class="usuarios-list">
+    <div class="usuarios-grid">
+      <div class="grid-header">
+        <div class="grid-cell">Nome</div>
+        <div class="grid-cell">Email</div>
+        <div class="grid-cell">Matrícula</div>
+        <div class="grid-cell">Função</div>
+        <div class="grid-cell actions-header">Ações</div>
+      </div>
+
+      <div 
+        *ngFor="let usuario of usuarios; trackBy: trackByUsuario" 
+        class="grid-row"
+        [class.editing]="editingUsuario?.id === usuario.id"
+      >
+        <!-- Modo visualização -->
+        <ng-container *ngIf="editingUsuario?.id !== usuario.id">
+          <div class="grid-cell">
+            <span class="label mobile-only">Nome:</span>
+            {{ usuario.nome }}
+          </div>
+          <div class="grid-cell">
+            <span class="label mobile-only">Email:</span>
+            {{ usuario.email }}
+          </div>
+          <div class="grid-cell">
+            <span class="label mobile-only">Matrícula:</span>
+            {{ usuario.matricula }}
+          </div>
+          <div class="grid-cell">
+            <span class="label mobile-only">Função:</span>
+            <span class="role-badge" [class]="'role-' + usuario.role.toLowerCase()">
+              {{ getRoleLabel(usuario.role) }}
+            </span>
+          </div>
+          <div class="grid-cell actions">
+            <button 
+              class="btn btn-sm btn-outline" 
+              (click)="startInlineEdit(usuario)"
+              title="Editar usuário"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-danger" 
+              (click)="deleteUsuario(usuario)"
+              title="Excluir usuário"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Modo edição inline -->
+        <ng-container *ngIf="editingUsuario?.id === usuario.id && editingUsuario">
+          <div class="grid-cell">
+            <input 
+              type="text" 
+              [(ngModel)]="editingUsuario.nome" 
+              class="form-control inline-edit"
+              placeholder="Nome"
+            >
+          </div>
+          <div class="grid-cell">
+            <input 
+              type="email" 
+              [(ngModel)]="editingUsuario.email" 
+              class="form-control inline-edit"
+              placeholder="Email"
+            >
+          </div>
+          <div class="grid-cell">
+            <input 
+              type="text" 
+              [(ngModel)]="editingUsuario.matricula" 
+              class="form-control inline-edit"
+              placeholder="Matrícula"
+            >
+          </div>
+          <div class="grid-cell">
+            <select 
+              [(ngModel)]="editingUsuario.role" 
+              class="form-control inline-edit"
+            >
+              <option value="COORDENADOR">Coordenador</option>
+              <option value="PROFESSOR">Professor</option>
+              <option value="ALUNO">Aluno</option>
+            </select>
+          </div>
+          <div class="grid-cell actions">
+            <button 
+              class="btn btn-sm btn-success" 
+              (click)="saveInlineEdit()"
+              title="Salvar alterações"
+            >
+              <i class="fas fa-check"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-secondary" 
+              (click)="cancelInlineEdit()"
+              title="Cancelar edição"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="errorMessage" class="error-banner">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ errorMessage }}
+    <button class="btn btn-close" (click)="clearError()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Success message -->
+  <div *ngIf="successMessage" class="success-banner">
+    <i class="fas fa-check-circle"></i>
+    {{ successMessage }}
+    <button class="btn btn-close" (click)="clearSuccess()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>

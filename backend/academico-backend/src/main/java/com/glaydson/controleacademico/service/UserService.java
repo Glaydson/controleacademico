@@ -23,35 +23,116 @@ import java.util.Set;
 @ApplicationScoped
 public class UserService {
 
-    @ConfigProperty(name = "quarkus.keycloak.admin-client.server-url")
+    @ConfigProperty(name = "keycloak.admin.server-url")
     String serverUrl;
 
-    @ConfigProperty(name = "quarkus.keycloak.admin-client.realm")
+    @ConfigProperty(name = "keycloak.admin.realm")
     String realm;
 
-    @ConfigProperty(name = "quarkus.keycloak.admin-client.client-id")
+    @ConfigProperty(name = "keycloak.admin.client-id")
     String clientId;
 
-    @ConfigProperty(name = "quarkus.keycloak.admin-client.client-secret")
+    @ConfigProperty(name = "keycloak.admin.client-secret")
     String clientSecret;
+
+    CursoRepository cursoRepository;
+    DisciplinaRepository disciplinaRepository;
 
     public UserService(CursoRepository cursoRepository, DisciplinaRepository disciplinaRepository) {
         this.cursoRepository = cursoRepository;
         this.disciplinaRepository = disciplinaRepository;
     }
 
-    CursoRepository cursoRepository;
-
-    DisciplinaRepository disciplinaRepository;
-
     private Keycloak getKeycloakAdminClient() {
+        // Detect if running in Docker container and adjust server URL accordingly
+        String effectiveServerUrl = getEffectiveKeycloakUrl();
+
         return KeycloakBuilder.builder()
-                .serverUrl(serverUrl)
+                .serverUrl(effectiveServerUrl)
                 .realm(realm)
                 .grantType("client_credentials")
                 .clientId(clientId)
                 .clientSecret(clientSecret)
                 .build();
+    }
+
+    private String getEffectiveKeycloakUrl() {
+        // Check if we're running in a Docker container
+        if (isRunningInDocker()) {
+            // Use container hostname for internal communication
+            String dockerUrl = serverUrl.replace("localhost", "keycloak");
+            System.out.println("=== Detected Docker environment, using URL: " + dockerUrl + " ===");
+            return dockerUrl;
+        } else {
+            System.out.println("=== Using configured server URL: " + serverUrl + " ===");
+            return serverUrl;
+        }
+    }
+
+    private boolean isRunningInDocker() {
+        try {
+            // Check for Docker-specific environment indicators
+            String hostname = System.getenv("HOSTNAME");
+            String dockerEnv = System.getenv("DOCKER_CONTAINER");
+            String containerName = System.getenv("COMPOSE_SERVICE");
+
+            System.out.println("=== Docker Detection Debug ===");
+            System.out.println("HOSTNAME: " + hostname);
+            System.out.println("DOCKER_CONTAINER: " + dockerEnv);
+            System.out.println("COMPOSE_SERVICE: " + containerName);
+
+            // Check if hostname looks like a Docker container ID or contains common Docker patterns
+            boolean dockerHostname = hostname != null && (
+                (hostname.length() == 12 && hostname.matches("^[a-f0-9]+$")) ||
+                hostname.contains("controle_academico") ||
+                hostname.contains("academico")
+            );
+
+            // Check for .dockerenv file (standard Docker indicator)
+            boolean dockerEnvFile = new java.io.File("/.dockerenv").exists();
+
+            // Check for cgroup Docker indicators
+            boolean dockerCgroup = false;
+            try {
+                String cgroup = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("/proc/1/cgroup")));
+                dockerCgroup = cgroup.contains("docker") || cgroup.contains("containerd") || cgroup.contains("kubepods");
+            } catch (Exception e) {
+                // Ignore - not running on Linux or can't read cgroup
+                System.out.println("Could not read cgroup info: " + e.getMessage());
+            }
+
+            // Additional check: if we can't reach localhost:8080 but serverUrl contains localhost, assume Docker
+            boolean networkIndicatesDocker = false;
+            if (serverUrl.contains("localhost")) {
+                try {
+                    java.net.Socket socket = new java.net.Socket();
+                    socket.connect(new java.net.InetSocketAddress("localhost", 8080), 2000);
+                    socket.close();
+                    // If we can connect to localhost:8080, we're probably not in Docker
+                    networkIndicatesDocker = false;
+                } catch (Exception e) {
+                    // If we can't connect to localhost:8080, we might be in Docker
+                    networkIndicatesDocker = true;
+                    System.out.println("Cannot connect to localhost:8080, assuming Docker environment");
+                }
+            }
+
+            boolean isDocker = dockerHostname || dockerEnvFile || dockerCgroup || "true".equals(dockerEnv) || networkIndicatesDocker;
+
+            System.out.println("=== Docker detection results ===");
+            System.out.println("dockerHostname: " + dockerHostname);
+            System.out.println("dockerEnvFile: " + dockerEnvFile);
+            System.out.println("dockerCgroup: " + dockerCgroup);
+            System.out.println("networkIndicatesDocker: " + networkIndicatesDocker);
+            System.out.println("Final result: " + isDocker);
+            System.out.println("=== End Docker Detection ===");
+
+            return isDocker;
+        } catch (Exception e) {
+            System.err.println("=== Error detecting Docker environment: " + e.getMessage() + " ===");
+            // If we can't detect properly and can't reach localhost, assume Docker
+            return serverUrl.contains("localhost");
+        }
     }
 
     @Transactional
@@ -218,43 +299,119 @@ public class UserService {
     // New methods for user management
 
     public java.util.List<UserResponseDTO> getAllUsers() {
+        System.out.println("=== getAllUsers() called ===");
+        System.out.println("Server URL: " + serverUrl);
+        System.out.println("Realm: " + realm);
+        System.out.println("Client ID: " + clientId);
+        System.out.println("Client Secret: " + (clientSecret != null ? "***" + clientSecret.substring(clientSecret.length()-4) : "null"));
+
+        // First, test basic connectivity to Keycloak
+        if (!isKeycloakReachable()) {
+            System.err.println("=== Keycloak server is not reachable at " + serverUrl + " ===");
+            throw new RuntimeException("Keycloak server is not reachable at " + serverUrl + ". Please ensure Keycloak is running and accessible.");
+        }
+
         Keycloak keycloak = null;
         try {
+            System.out.println("=== Attempting to create Keycloak admin client ===");
             keycloak = getKeycloakAdminClient();
-            
-            var users = keycloak.realm(realm).users().list();
-            java.util.List<com.glaydson.controleacademico.rest.dto.UserResponseDTO> result = new java.util.ArrayList<>();
-            
-            for (org.keycloak.representations.idm.UserRepresentation user : users) {
-                var userDto = new com.glaydson.controleacademico.rest.dto.UserResponseDTO();
-                userDto.setId(user.getId());
-                userDto.setNome(user.getFirstName());
-                userDto.setEmail(user.getEmail());
-                userDto.setEnabled(user.isEnabled());
-                
-                // Get user roles
+            System.out.println("=== Keycloak admin client created successfully ===");
+
+            System.out.println("=== Attempting to list users from Keycloak ===");
+            var allUsers = keycloak.realm(realm).users().list();
+            System.out.println("=== Retrieved " + allUsers.size() + " total users from Keycloak ===");
+
+            java.util.List<UserResponseDTO> result = new java.util.ArrayList<>();
+            java.util.Set<String> relevantRoles = java.util.Set.of("COORDENADOR", "ALUNO", "PROFESSOR", "ADMIN");
+            int filteredCount = 0;
+
+            for (org.keycloak.representations.idm.UserRepresentation user : allUsers) {
+                System.out.println("Processing user: " + user.getUsername());
+
+                // Get user roles to check if user has relevant application roles
                 var realmRoles = keycloak.realm(realm).users().get(user.getId()).roles().realmLevel().listEffective();
+                String userRole = null;
+                boolean hasRelevantRole = false;
+
                 if (!realmRoles.isEmpty()) {
-                    // Find first non-default role
+                    // Find first relevant application role (prioritize app roles over default roles)
                     for (var role : realmRoles) {
-                        if (!role.getName().equals("default-roles-academico") && !role.getName().equals("offline_access") && !role.getName().equals("uma_authorization")) {
-                            userDto.setRole(role.getName());
-                            break;
+                        System.out.println("Checking Role: " + role.getName());
+                        String roleName = role.getName();
+                        if (relevantRoles.contains(roleName)) {
+                            System.out.println("Found Relevant Role: " + roleName);
+                            userRole = roleName;
+                            hasRelevantRole = true;
+                            break; // Stop at first relevant role found
                         }
                     }
                 }
-                
-                // Get matricula from local database based on role
-                populateLocalUserData(userDto);
-                
-                result.add(userDto);
+
+                // Only include users with relevant application roles
+                if (hasRelevantRole) {
+                    System.out.println("Found Relevant Role: " + userRole);
+                    var userDto = new UserResponseDTO();
+                    userDto.setId(user.getId());
+                    userDto.setNome(user.getFirstName());
+                    userDto.setEmail(user.getEmail());
+                    userDto.setEnabled(user.isEnabled());
+                    userDto.setRole(userRole);
+
+                    // Get matricula from local database based on role
+                    populateLocalUserData(userDto);
+
+                    result.add(userDto);
+                    filteredCount++;
+                    System.out.println("Added user " + user.getUsername() + " with role: " + userRole);
+                } else {
+                    System.out.println("Skipped user " + user.getUsername() + " - no relevant application role");
+                }
             }
             
+            System.out.println("=== Filtered " + filteredCount + " relevant users from " + allUsers.size() + " total users ===");
+            System.out.println("=== Returning " + result.size() + " users ===");
             return result;
+        } catch (Exception e) {
+            System.err.println("=== ERROR in getAllUsers(): " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+
+            // Provide more specific error messages
+            if (e.getMessage().contains("Connection refused")) {
+                throw new RuntimeException("Cannot connect to Keycloak server. Please ensure Keycloak is running and accessible.", e);
+            } else if (e.getMessage().contains("Unauthorized") || e.getMessage().contains("401")) {
+                throw new RuntimeException("Authentication failed with Keycloak. Please check client credentials configuration.", e);
+            } else if (e.getMessage().contains("Forbidden") || e.getMessage().contains("403")) {
+                throw new RuntimeException("Access denied to Keycloak Admin API. The client 'academico-backend' needs to be configured with admin permissions in Keycloak. " +
+                    "Please ensure the client has 'Service Account Enabled' and appropriate admin roles assigned.", e);
+            } else if (e.getMessage().contains("realm") || e.getMessage().contains("404")) {
+                throw new RuntimeException("Keycloak realm '" + realm + "' not found. Please check realm configuration.", e);
+            } else {
+                throw new RuntimeException("Failed to retrieve users from Keycloak: " + e.getMessage(), e);
+            }
         } finally {
             if (keycloak != null) {
                 keycloak.close();
             }
+        }
+    }
+
+    private boolean isKeycloakReachable() {
+        // Use the same URL detection logic as the admin client
+        String effectiveUrl = getEffectiveKeycloakUrl();
+
+        try {
+            java.net.URL url = new java.net.URL(effectiveUrl + "/realms/" + realm);
+            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+
+            int responseCode = connection.getResponseCode();
+            System.out.println("=== Keycloak reachability check using " + effectiveUrl + ": HTTP " + responseCode + " ===");
+            return responseCode == 200;
+        } catch (Exception e) {
+            System.err.println("=== Keycloak reachability check failed using " + effectiveUrl + ": " + e.getMessage() + " ===");
+            return false;
         }
     }
 
@@ -264,23 +421,45 @@ public class UserService {
             keycloak = getKeycloakAdminClient();
             
             var user = keycloak.realm(realm).users().get(id).toRepresentation();
+
+            // Get user roles and prioritize relevant application roles
+            var realmRoles = keycloak.realm(realm).users().get(user.getId()).roles().realmLevel().listEffective();
+            java.util.Set<String> relevantRoles = java.util.Set.of("COORDENADOR", "ALUNO", "PROFESSOR", "ADMIN");
+            String userRole = null;
+            boolean hasRelevantRole = false;
+
+            if (!realmRoles.isEmpty()) {
+                // Find first relevant application role (prioritize app roles over default roles)
+                for (var role : realmRoles) {
+                    String roleName = role.getName();
+                    if (relevantRoles.contains(roleName)) {
+                        userRole = roleName;
+                        hasRelevantRole = true;
+                        break; // Stop at first relevant role found
+                    }
+                }
+
+                // If no relevant role found, log all roles for debugging
+                if (!hasRelevantRole) {
+                    System.out.println("User " + user.getUsername() + " has no relevant application roles. Available roles:");
+                    for (var role : realmRoles) {
+                        System.out.println("  - " + role.getName());
+                    }
+                }
+            }
+            
+            // Only return user if they have a relevant application role
+            if (!hasRelevantRole) {
+                throw new WebApplicationException("User does not have a relevant application role", Response.Status.NOT_FOUND);
+            }
+
             var userDto = new UserResponseDTO();
             userDto.setId(user.getId());
             userDto.setNome(user.getFirstName());
             userDto.setEmail(user.getEmail());
             userDto.setEnabled(user.isEnabled());
-            
-            // Get user roles
-            var realmRoles = keycloak.realm(realm).users().get(user.getId()).roles().realmLevel().listEffective();
-            if (!realmRoles.isEmpty()) {
-                for (var role : realmRoles) {
-                    if (!role.getName().equals("default-roles-academico") && !role.getName().equals("offline_access") && !role.getName().equals("uma_authorization")) {
-                        userDto.setRole(role.getName());
-                        break;
-                    }
-                }
-            }
-            
+            userDto.setRole(userRole);
+
             populateLocalUserData(userDto);
             
             return userDto;
@@ -421,5 +600,59 @@ public class UserService {
         Aluno.delete("keycloakId", keycloakId);
         Professor.delete("keycloakId", keycloakId);
         Coordenador.delete("keycloakId", keycloakId);
+    }
+
+    public java.util.List<String> getAvailableAdminRoles() {
+        System.out.println("=== getAvailableAdminRoles() called ===");
+
+        Keycloak keycloak = null;
+        try {
+            keycloak = getKeycloakAdminClient();
+
+            // Try to get realm-management client roles
+            try {
+                var realmManagementClient = keycloak.realm(realm).clients().findByClientId("realm-management");
+                if (!realmManagementClient.isEmpty()) {
+                    var clientId = realmManagementClient.get(0).getId();
+                    var roles = keycloak.realm(realm).clients().get(clientId).roles().list();
+
+                    System.out.println("=== Available realm-management roles: ===");
+                    java.util.List<String> roleNames = new java.util.ArrayList<>();
+                    for (var role : roles) {
+                        System.out.println("Role: " + role.getName() + " - " + role.getDescription());
+                        roleNames.add(role.getName() + " (" + role.getDescription() + ")");
+                    }
+                    return roleNames;
+                }
+            } catch (Exception e) {
+                System.err.println("Could not get realm-management roles: " + e.getMessage());
+            }
+
+            // Fallback: try to get realm roles
+            try {
+                var realmRoles = keycloak.realm(realm).roles().list();
+                System.out.println("=== Available realm roles: ===");
+                java.util.List<String> roleNames = new java.util.ArrayList<>();
+                for (var role : realmRoles) {
+                    if (role.getName().contains("admin") || role.getName().contains("user") || role.getName().contains("manage")) {
+                        System.out.println("Role: " + role.getName() + " - " + role.getDescription());
+                        roleNames.add("REALM:" + role.getName() + " (" + role.getDescription() + ")");
+                    }
+                }
+                return roleNames;
+            } catch (Exception e) {
+                System.err.println("Could not get realm roles: " + e.getMessage());
+            }
+
+            return java.util.Arrays.asList("Unable to retrieve roles - check permissions");
+
+        } catch (Exception e) {
+            System.err.println("=== ERROR in getAvailableAdminRoles(): " + e.getMessage());
+            return java.util.Arrays.asList("Error: " + e.getMessage());
+        } finally {
+            if (keycloak != null) {
+                keycloak.close();
+            }
+        }
     }
 }

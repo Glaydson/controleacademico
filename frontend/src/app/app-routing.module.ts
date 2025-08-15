@@ -9,6 +9,7 @@ import { GerenciarUsuariosComponent } from './gerenciar-usuarios/gerenciar-usuar
 import { GerenciarPedagogicoComponent } from './gerenciar-pedagogico/gerenciar-pedagogico';
 import { MontarMatrizComponent } from './montar-matriz/montar-matriz';
 import { VisualizarMatrizComponent } from './visualizar-matriz/visualizar-matriz';
+import { DebugComponent } from './debug/debug';
 
 // NOVOS COMPONENTES para o CRUD
 import { CursosComponent } from './cursos/cursos'; // Vamos criar este
@@ -56,6 +57,10 @@ const routes: Routes = [
         component: VisualizarMatrizComponent,
         canActivate: [RoleGuard],
         data: { roles: ['COORDENADOR', 'PROFESSOR', 'ALUNO'] } // Coordenador, Professor, Aluno
+      },
+      {
+        path: 'debug',
+        component: DebugComponent // Debug route accessible to all authenticated users
       },
       
     ]

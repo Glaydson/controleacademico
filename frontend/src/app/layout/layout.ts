@@ -47,11 +47,19 @@ export class LayoutComponent  {
   }
 
   logout(): void {
-  this.oidcSecurityService.logoffAndRevokeTokens().subscribe((result) => {
-    console.log('Logout completo:', result);
-    // Opcional: Navegar programaticamente para a home ou uma página de logout
-    // this.router.navigate(['/']);
-  });
+    this.oidcSecurityService.logoffAndRevokeTokens().subscribe((result) => {
+      console.log('Logout completo:', result);
+      // Opcional: Navegar programaticamente para a home ou uma página de logout
+      // this.router.navigate(['/']);
+    });
+  }
 
-}
+  forceRefresh(): void {
+    console.log('🔄 [LAYOUT] Forçando refresh completo da página...');
+    // Clear all local storage and session storage
+    localStorage.clear();
+    sessionStorage.clear();
+    // Force a complete page reload
+    window.location.href = '/';
+  }
 }

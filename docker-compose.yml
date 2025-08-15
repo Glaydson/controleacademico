@@ -78,7 +78,7 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: academico_pass
       QUARKUS_PROFILE: dev
       QUARKUS_OIDC_CLIENT_ID: academico-backend
-      QUARKUS_OIDC_CREDENTIALS_SECRET: dm3cpaNsboxZg6PRGyiObpqO6K3SjOgw
+      QUARKUS_OIDC_CREDENTIALS_SECRET: Xk2NkMGx2huDBloo3wTW1DSWefPViYXW
       QUARKUS_OIDC_CONNECTION_DELAY: 10s
       QUARKUS_OIDC_ROLES_ROLE_CLAIM_PATH: realm_access/roles
       QUARKUS_CONFIGURATION_OVERRIDE_MODE: env
@@ -86,6 +86,10 @@ services:
       QUARKUS_HTTP_PORT: 8081
       QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/controle-academico
       QUARKUS_OIDC_TOKEN_ISSUER: http://localhost:8080/realms/controle-academico
+      QUARKUS_OIDC_INTROSPECTION_AUTH_SERVER_URL: http://keycloak:8080/realms/controle-academico
+      QUARKUS_OIDC_INTROSPECTION_PATH: /protocol/openid-connect/token/introspect
+      QUARKUS_OIDC_INTROSPECTION_CLIENT_ID: academico-backend
+      QUARKUS_OIDC_INTROSPECTION_CREDENTIALS_SECRET: Xk2NkMGx2huDBloo3wTW1DSWefPViYXW
       # Configurações CORS via variáveis de ambiente
       QUARKUS_HTTP_CORS: "true"
       QUARKUS_HTTP_CORS_ORIGINS: "http://localhost:4200,http://frontend:4200"

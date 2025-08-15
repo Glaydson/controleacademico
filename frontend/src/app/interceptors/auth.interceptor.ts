@@ -47,12 +47,15 @@ export class AuthInterceptor implements HttpInterceptor {
       switchMap(token => {
         if (token && token.length > 0) {
           console.log('🔑 [INTERCEPTOR] Token válido encontrado');
+          console.log('🔑 [INTERCEPTOR] Token preview:', token.substring(0, 50) + '...');
           
           const authReq = req.clone({
             headers: req.headers.set('Authorization', `Bearer ${token}`)
           });
           
-          console.log('✅ [INTERCEPTOR] Header Authorization adicionado');
+          console.log('✅ [INTERCEPTOR] Header Authorization adicionado para:', req.url);
+          console.log('✅ [INTERCEPTOR] Request method:', req.method);
+          console.log('✅ [INTERCEPTOR] Request headers:', authReq.headers.keys());
           return next.handle(authReq);
           
         } else {
@@ -62,8 +65,9 @@ export class AuthInterceptor implements HttpInterceptor {
           return this.oidcSecurityService.isAuthenticated$.pipe(
             switchMap((authResult) => {
               if (!authResult.isAuthenticated) {
-                console.log('🚪 [INTERCEPTOR] Usuário não autenticado, redirecionando...');
-                this.oidcSecurityService.authorize();
+                console.log('🚪 [INTERCEPTOR] Usuário não autenticado, mas não forçando reautenticação');
+                // Don't call authorize() as it triggers new auth flow
+                // Just return an error and let the app handle it
                 return throwError(() => new Error('Usuário não autenticado'));
               }
               
@@ -77,10 +81,10 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         console.error('❌ [INTERCEPTOR] Erro na requisição:', error);
         
-        // Se erro 401 ou 403, tenta reautenticar
+        // Don't automatically trigger reauth on errors
+        // Let the application handle authentication failures
         if (error.status === 401 || error.status === 403) {
-          console.log('🔄 [INTERCEPTOR] Erro de autorização, tentando reautenticar...');
-          this.oidcSecurityService.authorize();
+          console.log('🔄 [INTERCEPTOR] Erro de autorização detectado, mas não forçando reautenticação automática');
         }
         
         return throwError(() => error);

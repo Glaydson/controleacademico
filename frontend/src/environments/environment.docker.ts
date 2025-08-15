@@ -2,33 +2,37 @@ import { OpenIdConfiguration, PassedInitialConfig } from 'angular-auth-oidc-clie
 
 const oidcConfig: OpenIdConfiguration = {
   configId: 'controle-academico',
-  authority: 'http://localhost:8080/realms/controle-academico', // Use direct Keycloak URL
+  authority: 'http://localhost:8080/realms/controle-academico',
   clientId: 'academico-frontend',
   redirectUrl: window.location.origin,
   postLogoutRedirectUri: window.location.origin,
   responseType: 'code',
-  scope: 'openid profile email roles backend-audience',
+  scope: 'openid profile email roles',
   triggerAuthorizationResultEvent: true,
   postLoginRoute: '/home',
   forbiddenRoute: '/home',
   unauthorizedRoute: '/home',
   logLevel: 0,
-  historyCleanupOff: false, // Enable cleanup to fix state issues
-  silentRenew: false, // Disable silent renewal temporarily
-  silentRenewUrl: window.location.origin + '/silentRenew.html',
-  silentRenewTimeoutInSeconds: 60,
-  renewTimeBeforeTokenExpiresInSeconds: 10,
-  useRefreshToken: true,
-  autoUserInfo: false, // Disable automatic user info fetching
+  
+  // Simplified configuration to minimize state issues
+  historyCleanupOff: true, // Disable automatic cleanup to prevent interference
+  silentRenew: false,
+  useRefreshToken: false,
+  autoUserInfo: false,
   startCheckSession: false,
-  maxIdTokenIatOffsetAllowedInSeconds: 1000,
+  
+  // Disable problematic validations that might cause state mismatches
+  maxIdTokenIatOffsetAllowedInSeconds: 3600,
   disableRefreshIdTokenAuthTimeValidation: true,
-  ignoreNonceAfterRefresh: true, // Add this to help with state issues
-  disableIatOffsetValidation: true, // Disable time validation
-  usePushedAuthorisationRequests: false, // Disable PAR
-  disablePkce: false, // Ensure PKCE is enabled (default)
-  // Explicitly set to public client mode
-  secureRoutes: [],
+  ignoreNonceAfterRefresh: true,
+  disableIatOffsetValidation: true,
+  usePushedAuthorisationRequests: false,
+  disablePkce: false,
+  
+  // Minimal secure routes
+  secureRoutes: ['/api'],
+  
+  // Empty custom params to avoid any parameter conflicts
   customParamsAuthRequest: {},
   customParamsCodeRequest: {},
   customParamsRefreshTokenRequest: {},

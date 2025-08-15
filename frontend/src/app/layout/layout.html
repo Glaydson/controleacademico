@@ -19,10 +19,15 @@
       <li *ngIf="hasAnyRole(['coordenador', 'professor', 'aluno'])">
         <a routerLink="/visualizar-matriz" routerLinkActive="active">Visualizar Matriz Curricular</a>
       </li>
+      
+      <li>
+        <a routerLink="/debug" routerLinkActive="active">🔍 Debug</a>
+      </li>
       </ul>
   </nav>
   <div class="user-info">
     <span *ngIf="userName">Olá, {{ userName }}!</span>
+    <button (click)="forceRefresh()" title="Forçar refresh completo">🔄</button>
     <button (click)="logout()">Logout</button>
   </div>
 </header>

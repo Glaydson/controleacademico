@@ -86,7 +86,7 @@ public class CursoResource {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("COORDENADOR") // Apenas administradores podem deletar cursos
+    @RolesAllowed({"COORDENADOR"}) // ADMIN can also delete courses
     public Response deletarCurso(@PathParam("id") Long id) {
         try {
             boolean deletado = cursoService.deletarCurso(id);

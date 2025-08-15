@@ -26,6 +26,7 @@ import { VisualizarMatrizComponent } from './visualizar-matriz/visualizar-matriz
 import { CursosComponent } from './cursos/cursos';
 import { HomeComponent } from './home/home';
 import { LayoutComponent } from './layout/layout';
+import { DebugComponent } from './debug/debug';
 
 @NgModule({
   imports: [
@@ -55,7 +56,8 @@ import { LayoutComponent } from './layout/layout';
     VisualizarMatrizComponent,
     CursosComponent,
     HomeComponent,
-    LayoutComponent
+    LayoutComponent,
+    DebugComponent
   ],
   bootstrap: [AppComponent]
 })
