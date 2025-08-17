@@ -1,6 +1,24 @@
 # Aplicação Controle Acadêmico - V1 (em construção)
 
 ## Situação Atual
+
+### 15 de agosto de 2025
+### Backend:
+    Todos os endpoints REST implementados, com autenticação e autorização via keycloak.
+    Resources para Cursos e Usuários implementados. Operações Básicas com testes unitários implementados.
+    Documentação da API gerada com OpenAPI 3.0.
+
+### Frontend:
+    Operações básicas com Cursos e Usuários implementadas, com autenticação via keycloak.
+
+### Em construção/pendente:
+- Operações básicas para Demais Entidades (Matriz Curricular, Disciplinas, Semestres.));
+- Demais testes unitários (Matriz Curricular, Disciplinas, Semestres);
+- Testes de Integração;
+- Melhoria das mensagens de erro no frontend;
+- Sistema de logging
+
+### 10 agosto de 2025
 ### Backend: 
     Todos os endpoints REST implementados, com autenticação e autorização via keycloak.
     Implementada a criação de novos usuários
@@ -10,7 +28,7 @@
 ### Frontend:
     Implementada a gestão de cursos (visualização, criação, edição, remoção), com autenticação via keycloak.
 
-Em construção/pendente:
+### Em construção/pendente:
 - Demais testes unitários (Matriz Curricular, Disciplinas, Semestres, etc.);
 - Implementação da criação de usuários no frontend;
 - Demais funcionalidades no frontend. 

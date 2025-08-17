@@ -1,9 +1,8 @@
 package com.glaydson.controleacademico.rest.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.HashSet;
-import java.util.Set;
 
 public class DisciplinaRequestDTO {
 
@@ -15,14 +14,15 @@ public class DisciplinaRequestDTO {
     @Size(max = 50, message = "O código não pode exceder 50 caracteres.")
     public String codigo;
 
-    public Set<Long> cursoIds = new HashSet<>(); // IDs dos cursos a serem associados
+    @NotNull(message = "O ID do curso é obrigatório.")
+    public Long cursoId; // ID do curso ao qual a disciplina pertence
 
     public DisciplinaRequestDTO() {}
 
-    public DisciplinaRequestDTO(String nome, String codigo, Set<Long> cursoIds) {
+    public DisciplinaRequestDTO(String nome, String codigo, Long cursoId) {
         this.nome = nome;
         this.codigo = codigo;
-        this.cursoIds = cursoIds;
+        this.cursoId = cursoId;
     }
 
     // Getters e Setters
@@ -30,6 +30,6 @@ public class DisciplinaRequestDTO {
     public void setNome(String nome) { this.nome = nome; }
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
-    public Set<Long> getCursoIds() { return cursoIds; }
-    public void setCursoIds(Set<Long> cursoIds) { this.cursoIds = cursoIds; }
+    public Long getCursoId() { return cursoId; }
+    public void setCursoId(Long cursoId) { this.cursoId = cursoId; }
 }

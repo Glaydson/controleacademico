@@ -1,14 +1,12 @@
 package com.glaydson.controleacademico.rest.dto;
 
 import com.glaydson.controleacademico.domain.model.Disciplina;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class DisciplinaResponseDTO {
     public Long id;
     public String nome;
     public String codigo;
-    public Set<CursoResponseDTO> cursos;
+    public CursoResponseDTO curso; // Single curso instead of Set<CursoResponseDTO>
 
     public DisciplinaResponseDTO() {}
 
@@ -17,10 +15,9 @@ public class DisciplinaResponseDTO {
         this.id = disciplina.id;
         this.nome = disciplina.nome;
         this.codigo = disciplina.codigo;
-        if (disciplina.getCursos() != null) {
-            this.cursos = disciplina.getCursos().stream()
-                    .map(CursoResponseDTO::new)
-                    .collect(Collectors.toSet());
+        if (disciplina.getCurso() != null) {
+            // Use simplified constructor to avoid circular references and lazy loading issues
+            this.curso = new CursoResponseDTO(disciplina.getCurso(), true);
         }
     }
 
@@ -31,6 +28,6 @@ public class DisciplinaResponseDTO {
     public void setNome(String nome) { this.nome = nome; }
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
-    public Set<CursoResponseDTO> getCursos() { return cursos; }
-    public void setCursos(Set<CursoResponseDTO> cursos) { this.cursos = cursos; }
+    public CursoResponseDTO getCurso() { return curso; }
+    public void setCurso(CursoResponseDTO curso) { this.curso = curso; }
 }

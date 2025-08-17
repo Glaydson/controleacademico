@@ -47,11 +47,13 @@ class UserResourceTest {
         testDisciplina1 = new Disciplina();
         testDisciplina1.nome = "Test Discipline 1";
         testDisciplina1.codigo = "TD001";
+        testDisciplina1.setCurso(testCurso);
         testDisciplina1.persist();
 
         testDisciplina2 = new Disciplina();
         testDisciplina2.nome = "Test Discipline 2";
         testDisciplina2.codigo = "TD002";
+        testDisciplina2.setCurso(testCurso);
         testDisciplina2.persist();
     }
 

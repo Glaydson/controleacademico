@@ -22,11 +22,9 @@ public class Curso extends PanacheEntityBase {
     @Column(nullable = false, unique = true)
     public String codigo;
 
-    // Relacionamento Many-to-Many com Disciplina
-    // mappedBy indica que a Disciplina é o lado "proprietário" do relacionamento
-    // cascade = CascadeType.MERGE para que ao salvar um Curso, as Disciplinas relacionadas sejam mescladas se existirem.
-    // fetch = FetchType.LAZY para carregar disciplinas apenas quando necessário.
-    @ManyToMany(mappedBy = "cursos", cascade = {CascadeType.MERGE}, fetch = FetchType.LAZY)
+    // Relacionamento One-to-Many com Disciplina
+    // Um curso pode ter muitas disciplinas, mas cada disciplina pertence a apenas um curso
+    @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     public Set<Disciplina> disciplinas = new HashSet<>(); // Conjunto de disciplinas associadas a este curso
 
     @OneToOne
@@ -85,11 +83,11 @@ public class Curso extends PanacheEntityBase {
     // Métodos utilitários para adicionar/remover disciplinas
     public void addDisciplina(Disciplina disciplina) {
         this.disciplinas.add(disciplina);
-        disciplina.getCursos().add(this);
+        disciplina.setCurso(this);
     }
 
     public void removeDisciplina(Disciplina disciplina) {
         this.disciplinas.remove(disciplina);
-        disciplina.getCursos().remove(this);
+        disciplina.setCurso(null);
     }
 }

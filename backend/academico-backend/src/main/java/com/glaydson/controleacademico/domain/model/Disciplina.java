@@ -2,8 +2,6 @@ package com.glaydson.controleacademico.domain.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "disciplina", uniqueConstraints = {
@@ -22,20 +20,23 @@ public class Disciplina extends PanacheEntityBase {
     @Column(nullable = false, unique = true)
     public String codigo; // Ex: "COMP201"
 
-    // Relacionamento Many-to-Many com Curso
-    // @JoinTable define a tabela intermediária e as colunas de união
-    // joinColumns é a coluna desta entidade (Disciplina) na tabela intermediária
-    // inverseJoinColumns é a coluna da entidade "inversa" (Curso) na tabela intermediária
-    @ManyToMany(cascade = {CascadeType.MERGE}, fetch = FetchType.LAZY)
-    @JoinTable(name = "curso_disciplina",
-            joinColumns = @JoinColumn(name = "disciplina_id"),
-            inverseJoinColumns = @JoinColumn(name = "curso_id"))
-    public Set<Curso> cursos = new HashSet<>(); // Conjunto de cursos aos quais esta disciplina pertence
+    // Relacionamento Many-to-One com Curso
+    // Cada disciplina pertence a apenas um curso
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "curso_id", nullable = false)
+    public Curso curso; // Curso ao qual esta disciplina pertence
 
     // Construtores
     public Disciplina() {
     }
 
+    public Disciplina(String nome, String codigo, Curso curso) {
+        this.nome = nome;
+        this.codigo = codigo;
+        this.curso = curso;
+    }
+
+    // Overloaded constructor without curso for flexibility
     public Disciplina(String nome, String codigo) {
         this.nome = nome;
         this.codigo = codigo;
@@ -66,22 +67,11 @@ public class Disciplina extends PanacheEntityBase {
         this.codigo = codigo;
     }
 
-    public Set<Curso> getCursos() {
-        return cursos;
+    public Curso getCurso() {
+        return curso;
     }
 
-    public void setCursos(Set<Curso> cursos) {
-        this.cursos = cursos;
-    }
-
-    // Métodos utilitários para adicionar/remover cursos
-    public void addCurso(Curso curso) {
-        this.cursos.add(curso);
-        curso.getDisciplinas().add(this);
-    }
-
-    public void removeCurso(Curso curso) {
-        this.cursos.remove(curso);
-        curso.getDisciplinas().remove(this);
+    public void setCurso(Curso curso) {
+        this.curso = curso;
     }
 }

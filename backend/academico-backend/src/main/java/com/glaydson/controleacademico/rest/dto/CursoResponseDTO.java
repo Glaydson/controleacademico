@@ -22,16 +22,44 @@ public class CursoResponseDTO {
             this.coordenador = new CoordenadorResponseDTO(curso.getCoordenador());
         }
 
-        if (curso.getCoordenador() != null) {
-            this.coordenador = new CoordenadorResponseDTO(curso.getCoordenador());
-        }
-
-
-        if (curso.getDisciplinas() != null) {
+        // Only load disciplinas if explicitly requested (not when called from DisciplinaResponseDTO)
+        // This prevents circular references and lazy loading issues
+        if (curso.getDisciplinas() != null && !isCalledFromDisciplinaContext()) {
             this.disciplinas = curso.getDisciplinas().stream()
-                    .map(DisciplinaResponseDTO::new)
+                    .map(disciplina -> {
+                        // Create a simple DisciplinaResponseDTO without curso details to avoid recursion
+                        DisciplinaResponseDTO dto = new DisciplinaResponseDTO();
+                        dto.id = disciplina.id;
+                        dto.nome = disciplina.nome;
+                        dto.codigo = disciplina.codigo;
+                        // Don't set curso to avoid circular reference
+                        return dto;
+                    })
                     .collect(Collectors.toSet());
         }
+    }
+
+    // Constructor for simplified curso info (used by DisciplinaResponseDTO)
+    public CursoResponseDTO(Curso curso, boolean simplified) {
+        this.id = curso.id;
+        this.nome = curso.nome;
+        this.codigo = curso.codigo;
+
+        // Don't load coordenador or disciplinas for simplified version
+        if (!simplified && curso.getCoordenador() != null) {
+            this.coordenador = new CoordenadorResponseDTO(curso.getCoordenador());
+        }
+    }
+
+    private boolean isCalledFromDisciplinaContext() {
+        // Check if this constructor is being called from DisciplinaResponseDTO
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        for (StackTraceElement element : stackTrace) {
+            if (element.getClassName().contains("DisciplinaResponseDTO")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Getters e Setters

@@ -2,8 +2,6 @@ package com.glaydson.controleacademico.rest.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.HashSet;
-import java.util.Set;
 
 public class CursoRequestDTO {
 
@@ -15,16 +13,20 @@ public class CursoRequestDTO {
     @Size(max = 50, message = "O código não pode exceder 50 caracteres.")
     public String codigo;
 
-    public Set<Long> disciplinaIds = new HashSet<>(); // IDs das disciplinas a serem associadas
-    public Long coordenadorId; // ID do coordenador (se a entidade Curso tiver este relacionamento)
+    public Long coordenadorId; // ID do coordenador (opcional)
 
     public CursoRequestDTO() {}
 
-    public CursoRequestDTO(String nome, String codigo, Set<Long> disciplinaIds, Long coordenadorId) {
+    public CursoRequestDTO(String nome, String codigo, Long coordenadorId) {
         this.nome = nome;
         this.codigo = codigo;
-        this.disciplinaIds = disciplinaIds;
         this.coordenadorId = coordenadorId;
+    }
+
+    // Construtor sobrecarregado sem coordenador para flexibilidade
+    public CursoRequestDTO(String nome, String codigo) {
+        this.nome = nome;
+        this.codigo = codigo;
     }
 
     // Getters e Setters
@@ -32,8 +34,6 @@ public class CursoRequestDTO {
     public void setNome(String nome) { this.nome = nome; }
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
-    public Set<Long> getDisciplinaIds() { return disciplinaIds; }
-    public void setDisciplinaIds(Set<Long> disciplinaIds) { this.disciplinaIds = disciplinaIds; }
     public Long getCoordenadorId() { return coordenadorId; }
     public void setCoordenadorId(Long coordenadorId) { this.coordenadorId = coordenadorId; }
 }
