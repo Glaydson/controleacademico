@@ -2,25 +2,19 @@ package com.glaydson.controleacademico.rest.dto;
 
 import jakarta.validation.constraints.NotNull;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class MatrizCurricularRequestDTO {
     @NotNull(message = "O ID do curso é obrigatório.")
     public Long cursoId;
-
-    @NotNull(message = "O ID do semestre é obrigatório.")
-    public Long semestreId;
-
-    public Set<Long> disciplinaIds = new HashSet<>(); // Conjunto de IDs de disciplinas
+    public List<PeriodoMatrizRequestDTO> periodos;
 
     // Construtores, Getters e Setters
     public MatrizCurricularRequestDTO() {}
 
-    public MatrizCurricularRequestDTO(Long cursoId, Long semestreId, Set<Long> disciplinaIds) {
+    public MatrizCurricularRequestDTO(Long cursoId, List<PeriodoMatrizRequestDTO> periodos) {
         this.cursoId = cursoId;
-        this.semestreId = semestreId;
-        this.disciplinaIds = disciplinaIds;
+        this.periodos = periodos;
     }
 
     public Long getCursoId() {
@@ -31,19 +25,11 @@ public class MatrizCurricularRequestDTO {
         this.cursoId = cursoId;
     }
 
-    public Long getSemestreId() {
-        return semestreId;
+    public List<PeriodoMatrizRequestDTO> getPeriodos() {
+        return periodos;
     }
 
-    public void setSemestreId(Long semestreId) {
-        this.semestreId = semestreId;
-    }
-
-    public Set<Long> getDisciplinaIds() {
-        return disciplinaIds;
-    }
-
-    public void setDisciplinaIds(Set<Long> disciplinaIds) {
-        this.disciplinaIds = disciplinaIds;
+    public void setPeriodos(List<PeriodoMatrizRequestDTO> periodos) {
+        this.periodos = periodos;
     }
 }

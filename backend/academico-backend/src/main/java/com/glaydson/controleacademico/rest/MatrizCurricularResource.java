@@ -47,19 +47,11 @@ public class MatrizCurricularResource {
 
     @POST
     @RolesAllowed({ "COORDENADOR"})
-    public Response criarMatrizCurricular(@Valid MatrizCurricularRequestDTO matrizDto) { // Recebe DTO de criação
-        try {
-            MatrizCurricular novaMatriz = matrizCurricularService.criarMatrizCurricular(matrizDto); // Passa DTO para o service
-            // Converte a entidade persistida para DTO de resposta antes de retornar
-            MatrizCurricularResponseDTO responseDto = new MatrizCurricularResponseDTO(novaMatriz);
-            return Response.created(UriBuilder.fromResource(MatrizCurricularResource.class).path(responseDto.id.toString()).build())
-                    .entity(responseDto)
-                    .build();
-        } catch (BadRequestException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } catch (NotFoundException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
-        }
+    public Response criarMatrizCurricular(@Valid MatrizCurricularRequestDTO matrizDto) {
+        MatrizCurricular matriz = matrizCurricularService.criarMatrizCurricular(matrizDto);
+        return Response.created(UriBuilder.fromResource(MatrizCurricularResource.class)
+                .path(String.valueOf(matriz.id)).build())
+                .entity(new MatrizCurricularResponseDTO(matriz)).build();
     }
 
     @PUT
