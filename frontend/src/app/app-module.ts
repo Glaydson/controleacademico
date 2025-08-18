@@ -24,6 +24,8 @@ import { GerenciarPedagogicoComponent } from './gerenciar-pedagogico/gerenciar-p
 import { MontarMatrizComponent } from './montar-matriz/montar-matriz';
 import { VisualizarMatrizComponent } from './visualizar-matriz/visualizar-matriz';
 import { CursosComponent } from './cursos/cursos';
+import { SemestresComponent } from './semestres/semestres';
+import { DisciplinasComponent } from './disciplinas/disciplinas';
 import { HomeComponent } from './home/home';
 import { LayoutComponent } from './layout/layout';
 import { DebugComponent } from './debug/debug';
@@ -55,6 +57,8 @@ import { DebugComponent } from './debug/debug';
     MontarMatrizComponent,
     VisualizarMatrizComponent,
     CursosComponent,
+    SemestresComponent,
+    DisciplinasComponent,
     HomeComponent,
     LayoutComponent,
     DebugComponent

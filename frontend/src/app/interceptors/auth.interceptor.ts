@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError, filter, take } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+  private isRefreshing = false;
+  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   constructor(private oidcSecurityService: OidcSecurityService) {}
 
@@ -81,14 +83,70 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         console.error('❌ [INTERCEPTOR] Erro na requisição:', error);
         
-        // Don't automatically trigger reauth on errors
-        // Let the application handle authentication failures
-        if (error.status === 401 || error.status === 403) {
-          console.log('🔄 [INTERCEPTOR] Erro de autorização detectado, mas não forçando reautenticação automática');
+        if (error.status === 401) {
+          console.log('🔄 [INTERCEPTOR] Token expirado (401), tentando renovar...');
+          return this.handle401Error(req, next);
+        }
+        
+        if (error.status === 403) {
+          console.log('🚫 [INTERCEPTOR] Acesso negado (403) - usuário não autorizado');
         }
         
         return throwError(() => error);
       })
     );
+  }
+
+  private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshTokenSubject.next(null);
+
+      console.log('🔄 [INTERCEPTOR] Iniciando renovação de token...');
+      
+      return this.oidcSecurityService.forceRefreshSession().pipe(
+        switchMap((result: any) => {
+          this.isRefreshing = false;
+          
+          if (result && result.isAuthenticated) {
+            console.log('✅ [INTERCEPTOR] Token renovado com sucesso');
+            
+            return this.oidcSecurityService.getAccessToken().pipe(
+              switchMap(newToken => {
+                this.refreshTokenSubject.next(newToken);
+                const authReq = request.clone({
+                  headers: request.headers.set('Authorization', `Bearer ${newToken}`)
+                });
+                return next.handle(authReq);
+              })
+            );
+          } else {
+            console.log('❌ [INTERCEPTOR] Falha na renovação do token, redirecionando para login');
+            this.isRefreshing = false;
+            this.oidcSecurityService.authorize();
+            return throwError(() => new Error('Token renewal failed'));
+          }
+        }),
+        catchError((error) => {
+          this.isRefreshing = false;
+          console.error('❌ [INTERCEPTOR] Erro durante renovação do token:', error);
+          this.oidcSecurityService.authorize();
+          return throwError(() => error);
+        })
+      );
+    } else {
+      // Token refresh is already in progress, wait for it to complete
+      console.log('⏳ [INTERCEPTOR] Aguardando renovação de token em andamento...');
+      return this.refreshTokenSubject.pipe(
+        filter(token => token != null),
+        take(1),
+        switchMap(token => {
+          const authReq = request.clone({
+            headers: request.headers.set('Authorization', `Bearer ${token}`)
+          });
+          return next.handle(authReq);
+        })
+      );
+    }
   }
 }

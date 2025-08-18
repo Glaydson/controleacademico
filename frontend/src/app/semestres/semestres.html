@@ -1,0 +1,219 @@
+<div class="semestres-container">
+  <div class="header">
+    <h1>Gerenciar Semestres</h1>
+    <button class="btn btn-primary" (click)="startCreating()">
+      <i class="fas fa-plus"></i>
+      Novo Semestre
+    </button>
+  </div>
+
+  <!-- Formulário de criação/edição -->
+  <div *ngIf="isCreating || isEditing" class="form-container">
+    <div class="form-header">
+      <h3>{{ isCreating ? 'Novo Semestre' : 'Editar Semestre' }}</h3>
+      <button class="btn btn-close" (click)="cancelForm()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <form (ngSubmit)="submitForm()" #semestreForm="ngForm" class="semestre-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ano">Ano *</label>
+          <select 
+            id="ano" 
+            name="ano"
+            [(ngModel)]="formData.ano" 
+            required 
+            #ano="ngModel"
+            class="form-control"
+            [class.error]="ano.invalid && ano.touched"
+          >
+            <option value="">Selecione um ano</option>
+            <option *ngFor="let year of getYearOptions()" [value]="year">
+              {{ year }}
+            </option>
+          </select>
+          <div *ngIf="ano.invalid && ano.touched" class="error-message">
+            Ano é obrigatório
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="periodo">Período *</label>
+          <select 
+            id="periodo" 
+            name="periodo"
+            [(ngModel)]="formData.periodo" 
+            required 
+            #periodo="ngModel"
+            class="form-control"
+            [class.error]="periodo.invalid && periodo.touched"
+          >
+            <option value="">Selecione um período</option>
+            <option *ngFor="let option of periodoOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <div *ngIf="periodo.invalid && periodo.touched" class="error-message">
+            Período é obrigatório
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelForm()">
+          Cancelar
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary" 
+          [disabled]="semestreForm.invalid || isLoading"
+        >
+          <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+          {{ isCreating ? 'Criar Semestre' : 'Salvar Alterações' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading && !isCreating && !isEditing" class="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    Carregando semestres...
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!isLoading && semestres.length === 0 && !isCreating" class="empty-state">
+    <i class="fas fa-calendar-alt"></i>
+    <h3>Nenhum semestre encontrado</h3>
+    <p>Comece criando seu primeiro semestre letivo.</p>
+    <button class="btn btn-primary" (click)="startCreating()">
+      <i class="fas fa-plus"></i>
+      Criar Primeiro Semestre
+    </button>
+  </div>
+
+  <!-- Lista de semestres -->
+  <div *ngIf="!isLoading && semestres.length > 0" class="semestres-list">
+    <div class="semestres-grid">
+      <div class="grid-header">
+        <div class="grid-cell">Ano</div>
+        <div class="grid-cell">Período</div>
+        <div class="grid-cell">Descrição</div>
+        <div class="grid-cell actions-header">Ações</div>
+      </div>
+
+      <div 
+        *ngFor="let semestre of semestres; trackBy: trackBySemestre" 
+        class="grid-row"
+        [class.editing]="editingSemestre?.id === semestre.id"
+      >
+        <!-- Modo visualização -->
+        <ng-container *ngIf="editingSemestre?.id !== semestre.id">
+          <div class="grid-cell">
+            <span class="label mobile-only">Ano:</span>
+            {{ semestre.ano }}
+          </div>
+          <div class="grid-cell">
+            <span class="label mobile-only">Período:</span>
+            <span class="periodo-badge" [class]="'periodo-' + semestre.periodo">
+              {{ getPeriodoLabel(semestre.periodo) }}
+            </span>
+          </div>
+          <div class="grid-cell">
+            <span class="label mobile-only">Descrição:</span>
+            <strong>{{ semestre.descricao }}</strong>
+          </div>
+          <div class="grid-cell actions">
+            <button 
+              class="btn btn-primary btn-action" 
+              (click)="startInlineEdit(semestre)"
+              title="Editar semestre"
+            >
+              <i class="fas fa-edit"></i>
+              <span class="btn-text">Editar</span>
+            </button>
+            <button 
+              class="btn btn-danger btn-action" 
+              (click)="deleteSemestre(semestre)"
+              title="Excluir semestre"
+            >
+              <i class="fas fa-trash"></i>
+              <span class="btn-text">Excluir</span>
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Modo edição inline -->
+        <ng-container *ngIf="editingSemestre?.id === semestre.id && editingSemestre">
+          <div class="grid-cell">
+            <select 
+              [(ngModel)]="editingSemestre.ano" 
+              class="form-control inline-edit"
+            >
+              <option *ngFor="let year of getYearOptions()" [value]="year">
+                {{ year }}
+              </option>
+            </select>
+          </div>
+          <div class="grid-cell">
+            <select 
+              [(ngModel)]="editingSemestre.periodo" 
+              class="form-control inline-edit"
+            >
+              <option *ngFor="let option of periodoOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+          <div class="grid-cell">
+            <span class="description-preview">
+              {{ editingSemestre.ano }}.{{ editingSemestre.periodo }}
+            </span>
+          </div>
+          <div class="grid-cell actions">
+            <button 
+              class="btn btn-success btn-action" 
+              (click)="saveInlineEdit()"
+              title="Salvar alterações"
+            >
+              <i class="fas fa-check"></i>
+              <span class="btn-text">Salvar</span>
+            </button>
+            <button 
+              class="btn btn-secondary btn-action" 
+              (click)="cancelInlineEdit()"
+              title="Cancelar edição"
+            >
+              <i class="fas fa-times"></i>
+              <span class="btn-text">Cancelar</span>
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="errorMessage" class="error-banner">
+    <div class="error-content">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>{{ errorMessage }}</span>
+      <button class="error-close" (click)="clearError()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Success message -->
+  <div *ngIf="successMessage" class="success-banner">
+    <div class="success-content">
+      <i class="fas fa-check-circle"></i>
+      <span>{{ successMessage }}</span>
+      <button class="success-close" (click)="clearSuccess()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>

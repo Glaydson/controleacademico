@@ -1,0 +1,195 @@
+<div class="disciplinas-container">
+  <h2>Gerenciar Disciplinas</h2>
+
+  <!-- Error and Success Messages -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <span class="alert-icon">⚠️</span>
+    <span class="alert-text">{{ errorMessage }}</span>
+    <button class="alert-close" (click)="clearError()">×</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span class="alert-icon">✅</span>
+    <span class="alert-text">{{ successMessage }}</span>
+    <button class="alert-close" (click)="clearSuccess()">×</button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <span>Carregando disciplinas...</span>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons" *ngIf="!isLoading">
+    <button 
+      class="btn btn-primary"
+      (click)="startCreating()"
+      *ngIf="!isCreating && !isEditing">
+      ➕ Nova Disciplina
+    </button>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div class="form-section" *ngIf="isCreating || isEditing">
+    <h3>{{ isCreating ? 'Criar Nova Disciplina' : 'Editar Disciplina' }}</h3>
+    
+    <form class="disciplina-form" (submit)="isCreating ? createDisciplina() : updateDisciplina()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nome">Nome da Disciplina *</label>
+          <input 
+            type="text" 
+            id="nome"
+            [(ngModel)]="formData.nome"
+            name="nome"
+            placeholder="Ex: Programação Orientada a Objetos"
+            required
+            class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="codigo">Código *</label>
+          <input 
+            type="text" 
+            id="codigo"
+            [(ngModel)]="formData.codigo"
+            name="codigo"
+            placeholder="Ex: POO001"
+            required
+            class="form-control">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="curso">Curso *</label>
+          <select 
+            id="curso"
+            [(ngModel)]="formData.cursoId"
+            name="curso"
+            required
+            class="form-control">
+            <option value="0">Selecione um curso</option>
+            <option *ngFor="let curso of cursos" [value]="curso.id">
+              {{ curso.nome }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isLoading">
+          {{ isCreating ? '➕ Criar Disciplina' : '💾 Salvar Alterações' }}
+        </button>
+        <button 
+          type="button"
+          class="btn btn-secondary"
+          (click)="cancelForm()"
+          [disabled]="isLoading">
+          ❌ Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Disciplinas List -->
+  <div class="disciplinas-list" *ngIf="!isLoading && disciplinas.length > 0">
+    <h3>Disciplinas Cadastradas ({{ disciplinas.length }})</h3>
+    
+    <div class="disciplinas-grid">
+      <div *ngFor="let disciplina of disciplinas" class="disciplina-card">
+        
+        <!-- Normal View Mode -->
+        <div *ngIf="editingDisciplina?.id !== disciplina.id" class="disciplina-content">
+          <div class="disciplina-header">
+            <h4 class="disciplina-nome">{{ disciplina.nome }}</h4>
+            <span class="disciplina-codigo">{{ disciplina.codigo }}</span>
+          </div>
+          
+          <div class="disciplina-info">
+            <div class="curso-info">
+              <span class="curso-label">Curso:</span>
+              <span class="curso-nome">{{ disciplina.curso.nome }}</span>
+            </div>
+          </div>
+          
+          <div class="disciplina-actions">
+            <button 
+              class="btn btn-small btn-edit"
+              (click)="startInlineEdit(disciplina)"
+              title="Editar disciplina">
+              ✏️ Editar
+            </button>
+            <button 
+              class="btn btn-small btn-danger"
+              (click)="deleteDisciplina(disciplina)"
+              title="Excluir disciplina">
+              🗑️ Excluir
+            </button>
+          </div>
+        </div>
+
+        <!-- Inline Edit Mode -->
+  <div *ngIf="editingDisciplina?.id === disciplina.id && editingDisciplina && editingDisciplina.curso" class="disciplina-edit-form">
+          <div class="edit-form-group">
+            <label>Nome:</label>
+            <input 
+              type="text" 
+              [(ngModel)]="editingDisciplina.nome"
+              class="form-control"
+              placeholder="Nome da disciplina">
+          </div>
+          
+          <div class="edit-form-group">
+            <label>Código:</label>
+            <input 
+              type="text" 
+              [(ngModel)]="editingDisciplina.codigo"
+              class="form-control"
+              placeholder="Código da disciplina">
+          </div>
+          
+          <div class="edit-form-group">
+            <label>Curso:</label>
+            <select 
+              [(ngModel)]="editingDisciplina.curso.id"
+              class="form-control">
+              <option *ngFor="let curso of cursos" [value]="curso.id">
+                {{ curso.nome }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="edit-form-actions">
+            <button 
+              class="btn btn-small btn-primary"
+              (click)="saveInlineEdit()">
+              💾 Salvar
+            </button>
+            <button 
+              class="btn btn-small btn-secondary"
+              (click)="cancelInlineEdit()">
+              ❌ Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && disciplinas.length === 0">
+    <div class="empty-icon">📚</div>
+    <h3>Nenhuma disciplina cadastrada</h3>
+    <p>Comece criando sua primeira disciplina.</p>
+    <button 
+      class="btn btn-primary"
+      (click)="startCreating()">
+      ➕ Criar Primera Disciplina
+    </button>
+  </div>
+</div>

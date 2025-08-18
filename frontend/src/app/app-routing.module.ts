@@ -13,8 +13,8 @@ import { DebugComponent } from './debug/debug';
 
 // NOVOS COMPONENTES para o CRUD
 import { CursosComponent } from './cursos/cursos'; // Vamos criar este
-// import { SemestresComponent } from './semestres/semestres.component'; // Futuro
-// import { DisciplinasComponent } from './disciplinas/disciplinas.component'; // Futuro
+import { SemestresComponent } from './semestres/semestres'; // Implementado
+import { DisciplinasComponent } from './disciplinas/disciplinas'; // Implementado
 
 
 const routes: Routes = [
@@ -42,8 +42,8 @@ const routes: Routes = [
         children: [ // Rotas filhas do GerenciarPedagogicoComponent
           { path: '', redirectTo: 'cursos', pathMatch: 'full' }, // Rota padrão para Cursos
           { path: 'cursos', component: CursosComponent },
-          // { path: 'semestres', component: SemestresComponent }, // Futuro
-          // { path: 'disciplinas', component: DisciplinasComponent }, // Futuro
+          { path: 'semestres', component: SemestresComponent }, // Implementado
+          { path: 'disciplinas', component: DisciplinasComponent }, // Implementado
         ]
       },
       {

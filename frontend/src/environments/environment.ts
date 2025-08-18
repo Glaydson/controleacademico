@@ -9,10 +9,10 @@ const oidcConfig: OpenIdConfiguration = {
   responseType: 'code',
   scope: 'openid profile email roles backend-audience',
   
-  // Configurações simplificadas para depuração
-  silentRenew: false,
-  useRefreshToken: false, // Temporarily disable to simplify
-  autoUserInfo: false, // Temporarily disable to simplify
+  // Configurações de renovação de token
+  silentRenew: true,
+  useRefreshToken: true,
+  autoUserInfo: false, // Keep disabled to simplify
   
   // Configurações de segurança
   historyCleanupOff: true, // Enable cleanup to avoid state conflicts
