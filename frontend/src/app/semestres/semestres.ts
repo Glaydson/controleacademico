@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { OidcSecurityService, AuthenticatedResult } from 'angular-auth-oidc-client';
 import { Semestre, CreateSemestreRequest, UpdateSemestreRequest } from '../models/semestre.model';
@@ -37,7 +38,8 @@ export class SemestresComponent implements OnInit {
   constructor(
     private semestreService: SemestreService,
     private router: Router,
-    private oidcSecurityService: OidcSecurityService
+    private oidcSecurityService: OidcSecurityService,
+    private toastr: ToastrService
   ) {
     console.log('🔧 [SEMESTRES] Componente inicializado');
   }
@@ -105,7 +107,8 @@ export class SemestresComponent implements OnInit {
           return;
         }
         
-        this.errorMessage = 'Erro ao carregar semestres. Tente novamente.';
+  this.errorMessage = 'Erro ao carregar semestres. Tente novamente.';
+  this.toastr.error(this.errorMessage);
         this.isLoading = false;
       }
     });
@@ -162,7 +165,8 @@ export class SemestresComponent implements OnInit {
       next: (novoSemestre) => {
         console.log('✅ [SEMESTRES] Semestre criado:', novoSemestre);
         this.loadSemestres(); // Reload to get updated list
-        this.successMessage = 'Semestre criado com sucesso!';
+  this.successMessage = 'Semestre criado com sucesso!';
+  this.toastr.success(this.successMessage);
         this.cancelForm();
         this.isLoading = false;
         this.clearSuccessAfterDelay();
@@ -173,6 +177,7 @@ export class SemestresComponent implements OnInit {
         if (error.status === 401) {
           console.log('🔄 [SEMESTRES] Token expirado durante criação, aguardando renovação automática...');
           this.errorMessage = 'Sessão expirada. Tentando renovar... Tente criar novamente em alguns segundos.';
+          this.toastr.error(this.errorMessage);
           this.isLoading = false;
           
           // Wait a moment for the interceptor to refresh the token
@@ -184,8 +189,10 @@ export class SemestresComponent implements OnInit {
         
         if (error.error && typeof error.error === 'string') {
           this.errorMessage = error.error;
+          this.toastr.error(this.errorMessage);
         } else {
           this.errorMessage = 'Erro ao criar semestre. Tente novamente.';
+          this.toastr.error(this.errorMessage);
         }
         this.isLoading = false;
       }
@@ -223,7 +230,8 @@ export class SemestresComponent implements OnInit {
       next: (semestreAtualizado) => {
         console.log('✅ [SEMESTRES] Semestre atualizado:', semestreAtualizado);
         this.loadSemestres(); // Reload to get updated list
-        this.successMessage = 'Semestre atualizado com sucesso!';
+  this.successMessage = 'Semestre atualizado com sucesso!';
+  this.toastr.success(this.successMessage);
         this.cancelForm();
         this.isLoading = false;
         this.clearSuccessAfterDelay();
@@ -235,6 +243,7 @@ export class SemestresComponent implements OnInit {
         } else {
           this.errorMessage = 'Erro ao atualizar semestre. Tente novamente.';
         }
+        this.toastr.error(this.errorMessage);
         this.isLoading = false;
       }
     });
@@ -257,7 +266,8 @@ export class SemestresComponent implements OnInit {
       next: () => {
         console.log('✅ [SEMESTRES] Semestre deletado');
         this.semestres = this.semestres.filter(s => s.id !== semestre.id);
-        this.successMessage = 'Semestre excluído com sucesso!';
+  this.successMessage = 'Semestre excluído com sucesso!';
+  this.toastr.success(this.successMessage);
         this.clearSuccessAfterDelay();
       },
       error: (error) => {
@@ -266,6 +276,7 @@ export class SemestresComponent implements OnInit {
         if (error.status === 401) {
           console.log('🔄 [SEMESTRES] Token expirado durante exclusão, aguardando renovação automática...');
           this.errorMessage = 'Sessão expirada. Tentando renovar... Tente excluir novamente em alguns segundos.';
+          this.toastr.error(this.errorMessage);
           
           // Wait a moment for the interceptor to refresh the token
           setTimeout(() => {
@@ -279,6 +290,7 @@ export class SemestresComponent implements OnInit {
         } else {
           this.errorMessage = 'Erro ao excluir semestre. Tente novamente.';
         }
+        this.toastr.error(this.errorMessage);
       }
     });
   }

@@ -1,0 +1,90 @@
+<div class="matriz-container">
+  <h2>Matrizes Curriculares</h2>
+
+  <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+  <div *ngIf="isLoading" class="loading">Carregando...</div>
+
+  <div *ngIf="!isLoading && canEdit()" class="actions">
+    <button class="btn btn-primary" (click)="startCreating()" *ngIf="!isCreating && !isEditing">➕ Nova Matriz Curricular</button>
+  </div>
+
+  <!-- List of Matrizes -->
+  <div *ngIf="!isLoading && matrizes.length > 0 && !isCreating && !isEditing && !selectedMatriz">
+    <table class="matriz-table">
+      <thead>
+        <tr>
+          <th>Curso</th>
+          <th>Períodos</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let matriz of matrizes">
+          <td>{{ matriz.cursoNome }}</td>
+          <td>{{ matriz.periodos.length }}</td>
+          <td>
+            <button class="btn btn-small btn-info" (click)="viewMatriz(matriz)">👁️ Visualizar</button>
+            <button class="btn btn-small btn-edit" (click)="startEditing(matriz)" *ngIf="canEdit()">✏️ Editar</button>
+            <button class="btn btn-small btn-danger" (click)="deleteMatriz(matriz)" *ngIf="canEdit()">🗑️ Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="isCreating || isEditing" class="matriz-form-section">
+    <h3>{{ isCreating ? 'Criar Nova Matriz Curricular' : 'Editar Matriz Curricular' }}</h3>
+    <form (ngSubmit)="isCreating ? createMatriz() : updateMatriz()">
+      <div class="form-group">
+        <label for="curso">Curso *</label>
+        <select id="curso" [(ngModel)]="formData.cursoId" name="curso" [disabled]="isEditing" required class="form-control">
+          <option value="0">Selecione um curso</option>
+          <option *ngFor="let curso of cursos" [value]="curso.id">{{ curso.nome }}</option>
+        </select>
+      </div>
+      <div class="periodos-section">
+        <h4>Períodos</h4>
+        <div *ngFor="let periodo of formData.periodos; let i = index" class="periodo-form">
+          <div class="periodo-header">
+            <span>Período {{ periodo.numero }}</span>
+            <button type="button" class="btn btn-small btn-danger" (click)="removePeriodo(i)" *ngIf="formData.periodos.length > 1">Remover</button>
+          </div>
+          <div class="form-group">
+            <label>Disciplinas</label>
+            <select multiple [(ngModel)]="periodo.disciplinaIds" name="disciplinas-{{i}}" class="form-control">
+              <option *ngFor="let disc of disciplinas" [value]="disc.id">{{ disc.nome }}</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" class="btn btn-small btn-secondary" (click)="addPeriodo()">+ Adicionar Período</button>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ isCreating ? 'Criar' : 'Salvar' }}</button>
+        <button type="button" class="btn btn-secondary" (click)="cancel()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- View Matriz Curricular -->
+  <div *ngIf="selectedMatriz && !isEditing && !isCreating" class="matriz-view-section">
+  <h3>Matriz Curricular de {{ selectedMatriz.cursoNome }}</h3>
+    <div *ngFor="let periodo of selectedMatriz.periodos" class="periodo-view">
+      <h4>Período {{ periodo.numero }}</h4>
+      <ul>
+        <li *ngFor="let disc of periodo.disciplinas">{{ disc.nome }}</li>
+      </ul>
+    </div>
+    <button class="btn btn-secondary" (click)="cancel()">Voltar</button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && matrizes.length === 0 && !isCreating && !isEditing">
+    <div class="empty-icon">📚</div>
+    <h3>Nenhuma matriz curricular cadastrada</h3>
+    <p>Comece criando sua primeira matriz curricular.</p>
+    <button class="btn btn-primary" (click)="startCreating()" *ngIf="canEdit()">➕ Criar Matriz Curricular</button>
+  </div>
+</div>

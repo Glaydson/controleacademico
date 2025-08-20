@@ -1,0 +1,139 @@
+.matriz-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+h2 {
+  color: #2c3e50;
+  margin-bottom: 24px;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.alert {
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+.alert-error { background: #fee; color: #c53030; border: 1px solid #fed7d7; }
+.alert-success { background: #f0fff4; color: #22543d; border: 1px solid #9ae6b4; }
+
+.loading { color: #888; margin: 20px 0; }
+
+.actions { margin-bottom: 24px; }
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-primary { background: #3498db; color: white; }
+.btn-primary:hover { background: #2980b9; }
+.btn-secondary { background: #95a5a6; color: white; }
+.btn-secondary:hover { background: #7f8c8d; }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-danger:hover { background: #c0392b; }
+.btn-edit { background: #f39c12; color: white; }
+.btn-edit:hover { background: #e67e22; }
+.btn-info { background: #16a085; color: white; }
+.btn-info:hover { background: #117864; }
+.btn-small { padding: 6px 14px; font-size: 0.95rem; }
+
+.matriz-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+.matriz-table th, .matriz-table td {
+  border: 1px solid #e1e8ed;
+  padding: 12px 10px;
+  text-align: left;
+}
+.matriz-table th {
+  background: #f8f9fa;
+  color: #34495e;
+  font-weight: 600;
+}
+
+.matriz-form-section, .matriz-view-section {
+  background: #f8f9fa;
+  padding: 28px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  border: 1px solid #e9ecef;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+.form-group label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 6px;
+  display: block;
+}
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  margin-bottom: 8px;
+}
+.form-control:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.periodos-section {
+  margin-bottom: 18px;
+}
+.periodo-form {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.periodo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.periodo-view {
+  margin-bottom: 18px;
+}
+.periodo-view h4 {
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+.periodo-view ul {
+  list-style: disc inside;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .matriz-container { padding: 10px; }
+  .matriz-form-section, .matriz-view-section { padding: 12px; }
+  .matriz-table th, .matriz-table td { padding: 8px 4px; }
+}
