@@ -12,9 +12,27 @@ import { Curso } from '../models/curso.model';
   standalone: false
 })
 export class DisciplinasComponent implements OnInit {
+  groupDisciplinasByCurso(): void {
+    const map = new Map<number, { curso: Curso, disciplinas: Disciplina[] }>();
+    for (const d of this.disciplinas) {
+      if (!d.curso) continue;
+      if (!map.has(d.curso.id)) {
+        map.set(d.curso.id, { curso: d.curso, disciplinas: [] });
+      }
+      map.get(d.curso.id)!.disciplinas.push(d);
+    }
+    this.disciplinasPorCurso = Array.from(map.values())
+      .sort((a, b) => a.curso.nome.localeCompare(b.curso.nome))
+      .map(group => ({
+        curso: group.curso,
+        disciplinas: group.disciplinas.sort((a, b) => a.nome.localeCompare(b.nome)),
+        collapsed: false
+      }));
+  }
   // Data
   disciplinas: Disciplina[] = [];
   cursos: Curso[] = [];
+  disciplinasPorCurso: { curso: Curso, disciplinas: Disciplina[], collapsed: boolean }[] = [];
   
   // Form state
   isCreating = false;
@@ -77,14 +95,8 @@ export class DisciplinasComponent implements OnInit {
     this.disciplinaService.getDisciplinas().subscribe({
       next: (disciplinas) => {
         console.log('✅ [DISCIPLINAS] Disciplinas carregadas:', disciplinas);
-        this.disciplinas = disciplinas.sort((a, b) => {
-          // Sort by course name, then by discipline name
-          const cursoComparison = a.curso.nome.localeCompare(b.curso.nome);
-          if (cursoComparison !== 0) {
-            return cursoComparison;
-          }
-          return a.nome.localeCompare(b.nome);
-        });
+          this.disciplinas = disciplinas;
+          this.groupDisciplinasByCurso();
         this.isLoading = false;
       },
       error: (error) => {
@@ -100,11 +112,27 @@ export class DisciplinasComponent implements OnInit {
         this.isLoading = false;
       }
     });
+    // Group disciplinas by curso
+    const map = new Map<number, { curso: Curso, disciplinas: Disciplina[] }>();
+    for (const d of this.disciplinas) {
+      if (!d.curso) continue;
+      if (!map.has(d.curso.id)) {
+        map.set(d.curso.id, { curso: d.curso, disciplinas: [] });
+      }
+      map.get(d.curso.id)!.disciplinas.push(d);
+    }
+    // Sort cursos by name, and disciplinas by name
+    this.disciplinasPorCurso = Array.from(map.values())
+      .sort((a, b) => a.curso.nome.localeCompare(b.curso.nome))
+      .map(group => ({
+        curso: group.curso,
+        disciplinas: group.disciplinas.sort((a, b) => a.nome.localeCompare(b.nome)),
+        collapsed: false
+      }));
   }
 
   loadCursos(): void {
     console.log('📋 [DISCIPLINAS] Carregando cursos...');
-    
     this.cursoService.getCursos().subscribe({
       next: (cursos) => {
         console.log('✅ [DISCIPLINAS] Cursos carregados:', cursos);
@@ -117,6 +145,13 @@ export class DisciplinasComponent implements OnInit {
         }
       }
     });
+  }
+
+  toggleCollapse(cursoId: number): void {
+    const group = this.disciplinasPorCurso.find(g => g.curso.id === cursoId);
+    if (group) {
+      group.collapsed = !group.collapsed;
+    }
   }
 
   startCreating(): void {
@@ -373,6 +408,8 @@ export class DisciplinasComponent implements OnInit {
       cursoId: 0
     };
   }
+  // Always regroup after create, update, or delete
+  // Call this.groupDisciplinasByCurso() after any change to this.disciplinas
 
   cancelForm(): void {
     console.log('❌ [DISCIPLINAS] Cancelando formulário');

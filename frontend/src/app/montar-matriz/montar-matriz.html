@@ -1,1 +1,81 @@
-<p>montar-matriz works!</p>
+
+<div class="montar-matriz-container">
+	<header class="section-header">
+		<h2 class="section-title">Montar Matriz Curricular</h2>
+		<p class="section-subtitle">Associe disciplinas a períodos de um curso</p>
+	</header>
+
+	<!-- Curso Selection -->
+	<section class="curso-select-section">
+		<label for="cursoSelect" class="form-label">Selecione o curso:</label>
+		<select id="cursoSelect" class="form-input" [(ngModel)]="selectedCurso" (change)="onCursoChange()">
+			<option [ngValue]="null">-- Escolha um curso --</option>
+			<option *ngFor="let curso of cursos" [ngValue]="curso">{{ curso.nome }}</option>
+		</select>
+	</section>
+
+
+	<!-- Matriz Curricular Table -->
+
+		<section *ngIf="matriz && selectedCurso" class="matriz-table-section">
+			<div class="table-header">
+				<h3 class="table-title">Períodos da Matriz Curricular</h3>
+				<button class="btn btn-primary btn-sm" (click)="addPeriodo()">➕ Adicionar Período</button>
+			</div>
+			<div class="table-container" *ngIf="matriz.periodos.length > 0; else noPeriodos">
+				<div class="table-wrapper">
+					<table class="matriz-table">
+						<thead>
+							<tr>
+								<th>Nº Período</th>
+								<th>Disciplinas</th>
+								<th>Ações</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr *ngFor="let periodo of matriz.periodos; let i = index">
+								<td>{{ periodo.numero }}</td>
+								<td>
+									<div class="disciplinas-list">
+										<span *ngFor="let disc of periodo.disciplinas" class="disciplina-badge">
+											{{ disc.nome }}
+											<button type="button" class="btn btn-xs btn-danger" (click)="removeDisciplinaFromPeriodo(periodo, disc.id)">×</button>
+										</span>
+									</div>
+									<div class="add-disciplina-section">
+															<select class="form-input form-input-sm" [(ngModel)]="selectedDisciplina[periodo.numero]">
+																<option [ngValue]="null">Adicionar disciplina...</option>
+																<option *ngFor="let d of getAvailableDisciplinas()" [ngValue]="d">
+																	{{ d.nome }}
+																</option>
+															</select>
+										<button type="button" class="btn btn-xs btn-secondary" (click)="selectedDisciplina[periodo.numero] && addDisciplinaToPeriodo(periodo, selectedDisciplina[periodo.numero]); selectedDisciplina[periodo.numero]=null" [disabled]="!selectedDisciplina[periodo.numero]">Adicionar</button>
+									</div>
+								</td>
+								<td>
+									<button class="btn btn-danger btn-xs" (click)="removePeriodo(i)">Remover Período</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<ng-template #noPeriodos>
+				<div class="empty-state">
+					<div class="empty-icon">📅</div>
+					<h4 class="empty-title">Nenhum período adicionado</h4>
+					<p class="empty-description">Clique em "Adicionar Período" para começar a montar a matriz.</p>
+				</div>
+			</ng-template>
+			<div class="matriz-actions">
+				<button class="btn btn-success" (click)="saveMatriz()" [disabled]="!canSaveMatriz()">💾 Salvar Matriz</button>
+				<button class="btn btn-outline btn-danger" (click)="deleteMatriz()" [disabled]="!matriz.id || isLoading">🗑️ Remover Matriz</button>
+			</div>
+		</section>
+
+	<div *ngIf="!matriz && selectedCurso" class="empty-state">
+		<div class="empty-icon">🗂️</div>
+		<h4 class="empty-title">Nenhuma matriz curricular cadastrada para este curso.</h4>
+		<p class="empty-description">Adicione períodos e disciplinas para criar uma nova matriz.</p>
+	</div>
+</div>

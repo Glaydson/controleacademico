@@ -1,6 +1,8 @@
 // src/app/app.module.ts
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ToastrModule } from 'ngx-toastr';
 import { AuthModule } from 'angular-auth-oidc-client';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -29,14 +31,23 @@ import { DisciplinasComponent } from './disciplinas/disciplinas';
 import { HomeComponent } from './home/home';
 import { LayoutComponent } from './layout/layout';
 import { DebugComponent } from './debug/debug';
+import { MatrizCurricularComponent } from './matriz-curricular/matriz-curricular';
 
 @NgModule({
   imports: [
+    BrowserAnimationsModule, // Must be first for animations to work
     BrowserModule,
     CommonModule,
     AppRoutingModule,
     HttpClientModule, // Ainda funciona, apenas deprecated
     FormsModule,
+    ToastrModule.forRoot({
+      positionClass: 'toast-top-right',
+      timeOut: 4000,
+      closeButton: true,
+      progressBar: true,
+      preventDuplicates: true,
+    }),
     AuthModule.forRoot({
       config: environment.oidcConfig
     })
@@ -61,7 +72,8 @@ import { DebugComponent } from './debug/debug';
     DisciplinasComponent,
     HomeComponent,
     LayoutComponent,
-    DebugComponent
+  DebugComponent,
+  MatrizCurricularComponent
   ],
   bootstrap: [AppComponent]
 })

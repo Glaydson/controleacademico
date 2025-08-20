@@ -139,4 +139,73 @@ public class MatrizCurricularResourceTest {
         MatrizCurricularRequestDTO request = new MatrizCurricularRequestDTO(cursoId, Arrays.asList(new PeriodoMatrizRequestDTO(1, new HashSet<>(Arrays.asList(disciplinaId1)))));
         assertThrows(io.quarkus.security.ForbiddenException.class, () -> matrizCurricularResource.criarMatrizCurricular(request));
     }
+
+    @Test
+    @Order(9)
+    @TestSecurity(user = "coord", roles = {"COORDENADOR"})
+    void testCriarMatrizComDisciplinaDuplicadaEmPeriodos() {
+        // disciplinaId1 in both periods
+        PeriodoMatrizRequestDTO periodo1 = new PeriodoMatrizRequestDTO(1, new HashSet<>(Arrays.asList(disciplinaId1)));
+        PeriodoMatrizRequestDTO periodo2 = new PeriodoMatrizRequestDTO(2, new HashSet<>(Arrays.asList(disciplinaId1)));
+        MatrizCurricularRequestDTO request = new MatrizCurricularRequestDTO(cursoId, Arrays.asList(periodo1, periodo2));
+        Exception ex = assertThrows(Exception.class, () -> matrizCurricularResource.criarMatrizCurricular(request));
+        assertTrue(ex.getMessage().contains("Disciplina(s) presente(s) em mais de um período"));
+    }
+
+    @Test
+    @Order(10)
+    @TestSecurity(user = "coord", roles = {"COORDENADOR"})
+    @Transactional
+    void testCriarMatrizComDisciplinaDeOutroCurso() {
+        // Create a disciplina for another curso
+        Curso outroCurso = new Curso("Outro Curso", "OC001");
+        outroCurso.persist();
+        Disciplina disciplinaOutroCurso = new Disciplina("Física", "FIS01", outroCurso);
+        disciplinaOutroCurso.persist();
+        PeriodoMatrizRequestDTO periodo1 = new PeriodoMatrizRequestDTO(1, new HashSet<>(Arrays.asList(disciplinaOutroCurso.id)));
+        MatrizCurricularRequestDTO request = new MatrizCurricularRequestDTO(cursoId, Arrays.asList(periodo1));
+        Exception ex = assertThrows(Exception.class, () -> matrizCurricularResource.criarMatrizCurricular(request));
+        assertTrue(ex.getMessage().contains("não pertence ao curso informado"));
+    }
+
+    @Test
+    @Order(11)
+    @TestSecurity(user = "coord", roles = {"COORDENADOR"})
+    void testAtualizarMatrizComDisciplinaDuplicadaEmPeriodos() {
+        // Create valid matriz
+        PeriodoMatrizRequestDTO periodo1 = new PeriodoMatrizRequestDTO(1, new HashSet<>(Arrays.asList(disciplinaId1)));
+        PeriodoMatrizRequestDTO periodo2 = new PeriodoMatrizRequestDTO(2, new HashSet<>(Arrays.asList(disciplinaId2)));
+        MatrizCurricularRequestDTO createRequest = new MatrizCurricularRequestDTO(cursoId, Arrays.asList(periodo1, periodo2));
+        var createResp = matrizCurricularResource.criarMatrizCurricular(createRequest);
+        MatrizCurricularResponseDTO created = (MatrizCurricularResponseDTO) createResp.getEntity();
+        // Try to update with disciplinaId1 in both periods
+        PeriodoMatrizRequestDTO updPeriodo1 = new PeriodoMatrizRequestDTO(1, new HashSet<>(Arrays.asList(disciplinaId1)));
+        PeriodoMatrizRequestDTO updPeriodo2 = new PeriodoMatrizRequestDTO(2, new HashSet<>(Arrays.asList(disciplinaId1)));
+        MatrizCurricularRequestDTO updateRequest = new MatrizCurricularRequestDTO(cursoId, Arrays.asList(updPeriodo1, updPeriodo2));
+        var response = matrizCurricularResource.atualizarMatrizCurricular(created.id, updateRequest);
+        assertEquals(400, response.getStatus(), "Expected BAD_REQUEST status for duplicated disciplina");
+        assertTrue(response.getEntity().toString().contains("Disciplina(s) presente(s) em mais de um período"), "Expected error message about duplicated disciplina");
+    }
+
+    @Test
+    @Order(12)
+    @TestSecurity(user = "coord", roles = {"COORDENADOR"})
+    @Transactional
+    void testAtualizarMatrizComDisciplinaDeOutroCurso() {
+        // Create valid matriz
+        PeriodoMatrizRequestDTO periodo1 = new PeriodoMatrizRequestDTO(1, new HashSet<>(Arrays.asList(disciplinaId1)));
+        MatrizCurricularRequestDTO createRequest = new MatrizCurricularRequestDTO(cursoId, Arrays.asList(periodo1));
+        var createResp = matrizCurricularResource.criarMatrizCurricular(createRequest);
+        MatrizCurricularResponseDTO created = (MatrizCurricularResponseDTO) createResp.getEntity();
+        // Create disciplina for another curso
+        Curso outroCurso = new Curso("Outro Curso", "OC001");
+        outroCurso.persist();
+        Disciplina disciplinaOutroCurso = new Disciplina("Física", "FIS01", outroCurso);
+        disciplinaOutroCurso.persist();
+        PeriodoMatrizRequestDTO updPeriodo1 = new PeriodoMatrizRequestDTO(1, new HashSet<>(Arrays.asList(disciplinaOutroCurso.id)));
+        MatrizCurricularRequestDTO updateRequest = new MatrizCurricularRequestDTO(cursoId, Arrays.asList(updPeriodo1));
+        var response = matrizCurricularResource.atualizarMatrizCurricular(created.id, updateRequest);
+        assertEquals(400, response.getStatus(), "Expected BAD_REQUEST status for disciplina from another curso");
+        assertTrue(response.getEntity().toString().contains("não pertence ao curso informado"), "Expected error message about disciplina not belonging to curso");
+    }
 }

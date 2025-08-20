@@ -1,1 +1,56 @@
-<p>visualizar-matriz works!</p>
+
+<div class="visualizar-matriz-container">
+	<header class="section-header">
+		<h2 class="section-title">Visualizar Matriz Curricular</h2>
+		<p class="section-subtitle">Consulte os períodos e disciplinas de um curso</p>
+	</header>
+
+	<!-- Curso Selection -->
+	<section class="curso-select-section">
+		<label for="cursoSelect" class="form-label">Selecione o curso:</label>
+		<select id="cursoSelect" class="form-input" [(ngModel)]="selectedCurso" (change)="onCursoChange()">
+			<option [ngValue]="null">-- Escolha um curso --</option>
+			<option *ngFor="let curso of cursos" [ngValue]="curso">{{ curso.nome }}</option>
+		</select>
+	</section>
+
+	<!-- Feedback Messages -->
+	<div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+	<!-- Matriz Curricular Table (Read-only) -->
+	<section *ngIf="matriz" class="matriz-table-section">
+		<div class="table-header">
+			<h3 class="table-title">Períodos da Matriz Curricular</h3>
+		</div>
+		<div class="table-container">
+			<div class="table-wrapper">
+				<table class="matriz-table">
+					<thead>
+						<tr>
+							<th>Nº Período</th>
+							<th>Disciplinas</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let periodo of matriz.periodos">
+							<td>{{ periodo.numero }}</td>
+											<td>
+												<ul class="disciplinas-list">
+													<li *ngFor="let disc of periodo.disciplinas" class="disciplina-badge">
+														{{ disc.nome }}
+													</li>
+												</ul>
+											</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+
+	<div *ngIf="!matriz && selectedCurso" class="empty-state">
+		<div class="empty-icon">🗂️</div>
+		<h4 class="empty-title">Nenhuma matriz curricular cadastrada para este curso.</h4>
+		<p class="empty-description">Selecione outro curso para visualizar sua matriz.</p>
+	</div>
+</div>

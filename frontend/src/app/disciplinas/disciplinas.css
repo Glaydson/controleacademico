@@ -12,11 +12,38 @@ h2 {
   font-weight: 600;
 }
 
+
 h3 {
-  color: #34495e;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(90deg, #3498db 60%, #2980b9 100%);
+  margin-bottom: 24px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  padding: 16px 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(52,152,219,0.08);
+  letter-spacing: 0.5px;
+}
+/* Curso Group Card */
+.curso-group-card {
+  background: #f4faff;
+  border: 2px solid #3498db;
+  border-radius: 14px;
+  margin-bottom: 36px;
+  padding: 18px 24px 8px 24px;
+  box-shadow: 0 2px 12px rgba(52,152,219,0.07);
+  transition: box-shadow 0.2s;
+}
+
+.curso-group-title {
+  color: #2980b9;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  margin-top: 0;
+  letter-spacing: 0.2px;
+  border-left: 6px solid #3498db;
+  padding-left: 12px;
 }
 
 /* Alert Messages */

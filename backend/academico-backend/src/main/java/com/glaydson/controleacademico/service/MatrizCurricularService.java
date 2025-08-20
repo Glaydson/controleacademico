@@ -41,6 +41,30 @@ public class MatrizCurricularService {
         return matrizCurricularRepository.findByIdOptional(id);
     }
 
+    private void validarDisciplinasMatriz(Long cursoId, List<PeriodoMatrizRequestDTO> periodos) {
+        java.util.Set<Long> allDisciplinaIds = new java.util.HashSet<>();
+        java.util.Set<Long> duplicateDisciplinaIds = new java.util.HashSet<>();
+        for (PeriodoMatrizRequestDTO periodo : periodos) {
+            for (Long disciplinaId : periodo.getDisciplinaIds()) {
+                if (!allDisciplinaIds.add(disciplinaId)) {
+                    duplicateDisciplinaIds.add(disciplinaId);
+                }
+                Disciplina disciplina = disciplinaRepository.findById(disciplinaId);
+                if (disciplina == null) {
+                    throw new NotFoundException("Disciplina não encontrada: " + disciplinaId);
+                }
+                if (disciplina.curso == null || disciplina.curso.id == null || !disciplina.curso.id.equals(cursoId)) {
+                    throw new BadRequestException("Disciplina '" + disciplina.nome + "' (ID: " + disciplinaId + ") não pertence ao curso informado.");
+                }
+            }
+        }
+        System.out.println("DEBUG: allDisciplinaIds=" + allDisciplinaIds + ", duplicateDisciplinaIds=" + duplicateDisciplinaIds);
+        if (!duplicateDisciplinaIds.isEmpty()) {
+            System.out.println("THROWING BadRequestException for duplicates: " + duplicateDisciplinaIds);
+            throw new BadRequestException("Disciplina(s) presente(s) em mais de um período: " + duplicateDisciplinaIds);
+        }
+    }
+
     @Transactional
     public MatrizCurricular criarMatrizCurricular(MatrizCurricularRequestDTO matrizDto) {
         if (matrizDto.getCursoId() == null) {
@@ -49,6 +73,9 @@ public class MatrizCurricularService {
         Curso curso = cursoRepository.findById(matrizDto.getCursoId());
         if (curso == null) {
             throw new NotFoundException("Curso não encontrado.");
+        }
+        if (matrizDto.getPeriodos() != null) {
+            validarDisciplinasMatriz(matrizDto.getCursoId(), matrizDto.getPeriodos());
         }
         MatrizCurricular matriz = new MatrizCurricular(curso);
         matriz.periodos = new java.util.ArrayList<>();
@@ -61,9 +88,6 @@ public class MatrizCurricularService {
                 if (periodoDto.getDisciplinaIds() != null) {
                     for (Long disciplinaId : periodoDto.getDisciplinaIds()) {
                         Disciplina disciplina = disciplinaRepository.findById(disciplinaId);
-                        if (disciplina == null) {
-                            throw new NotFoundException("Disciplina não encontrada: " + disciplinaId);
-                        }
                         periodo.disciplinas.add(disciplina);
                     }
                 }
@@ -73,7 +97,6 @@ public class MatrizCurricularService {
         matrizCurricularRepository.persist(matriz);
         return matriz;
     }
-
 
     @Transactional
     public MatrizCurricular atualizarMatrizCurricular(Long id, MatrizCurricularRequestDTO matrizDto) {
@@ -92,14 +115,13 @@ public class MatrizCurricularService {
             throw new BadRequestException("Já existe outra matriz curricular com o mesmo Curso.");
         }
 
-        // Atualiza a lista de periodos e disciplinas
         if (matrizDto.getPeriodos() != null) {
+            validarDisciplinasMatriz(matrizExistente.getCurso().id, matrizDto.getPeriodos());
             List<PeriodoMatriz> periodosAtualizados = new java.util.ArrayList<>();
             for (PeriodoMatrizRequestDTO periodoDto : matrizDto.getPeriodos()) {
                 PeriodoMatriz periodo = new PeriodoMatriz();
                 periodo.setNumero(periodoDto.getNumero());
                 periodo.setMatrizCurricular(matrizExistente);
-                // Atualiza disciplinas do período
                 java.util.Set<Disciplina> disciplinasAtualizadas = new java.util.HashSet<>();
                 if (periodoDto.getDisciplinaIds() != null) {
                     for (Long disciplinaId : periodoDto.getDisciplinaIds()) {

@@ -96,85 +96,81 @@
     </form>
   </div>
 
-  <!-- Disciplinas List -->
-  <div class="disciplinas-list" *ngIf="!isLoading && disciplinas.length > 0">
-    <h3>Disciplinas Cadastradas ({{ disciplinas.length }})</h3>
-    
-    <div class="disciplinas-grid">
-      <div *ngFor="let disciplina of disciplinas" class="disciplina-card">
-        
-        <!-- Normal View Mode -->
-        <div *ngIf="editingDisciplina?.id !== disciplina.id" class="disciplina-content">
-          <div class="disciplina-header">
-            <h4 class="disciplina-nome">{{ disciplina.nome }}</h4>
-            <span class="disciplina-codigo">{{ disciplina.codigo }}</span>
-          </div>
-          
-          <div class="disciplina-info">
-            <div class="curso-info">
-              <span class="curso-label">Curso:</span>
-              <span class="curso-nome">{{ disciplina.curso.nome }}</span>
-            </div>
-          </div>
-          
-          <div class="disciplina-actions">
-            <button 
-              class="btn btn-small btn-edit"
-              (click)="startInlineEdit(disciplina)"
-              title="Editar disciplina">
-              ✏️ Editar
-            </button>
-            <button 
-              class="btn btn-small btn-danger"
-              (click)="deleteDisciplina(disciplina)"
-              title="Excluir disciplina">
-              🗑️ Excluir
-            </button>
-          </div>
-        </div>
 
-        <!-- Inline Edit Mode -->
-  <div *ngIf="editingDisciplina?.id === disciplina.id && editingDisciplina && editingDisciplina.curso" class="disciplina-edit-form">
-          <div class="edit-form-group">
-            <label>Nome:</label>
-            <input 
-              type="text" 
-              [(ngModel)]="editingDisciplina.nome"
-              class="form-control"
-              placeholder="Nome da disciplina">
-          </div>
-          
-          <div class="edit-form-group">
-            <label>Código:</label>
-            <input 
-              type="text" 
-              [(ngModel)]="editingDisciplina.codigo"
-              class="form-control"
-              placeholder="Código da disciplina">
-          </div>
-          
-          <div class="edit-form-group">
-            <label>Curso:</label>
-            <select 
-              [(ngModel)]="editingDisciplina.curso.id"
-              class="form-control">
-              <option *ngFor="let curso of cursos" [value]="curso.id">
-                {{ curso.nome }}
-              </option>
-            </select>
-          </div>
-          
-          <div class="edit-form-actions">
-            <button 
-              class="btn btn-small btn-primary"
-              (click)="saveInlineEdit()">
-              💾 Salvar
-            </button>
-            <button 
-              class="btn btn-small btn-secondary"
-              (click)="cancelInlineEdit()">
-              ❌ Cancelar
-            </button>
+  <!-- Disciplinas List Agrupadas por Curso -->
+  <div class="disciplinas-list" *ngIf="!isLoading && disciplinasPorCurso.length > 0">
+    <h3>Disciplinas Cadastradas ({{ disciplinas.length }})</h3>
+    <div class="disciplinas-grouped">
+      <div *ngFor="let grupo of disciplinasPorCurso" class="curso-group">
+        <div class="curso-header" (click)="toggleCollapse(grupo.curso.id!)" style="cursor:pointer; display:flex; align-items:center;">
+          <span style="font-size:1.2em; margin-right:8px;">{{ grupo.collapsed ? '▶' : '▼' }}</span>
+          <span class="curso-nome" style="font-size:1.4em; font-weight:700; color:#1a237e; background:#fff; padding:2px 10px; border-radius:4px; box-shadow:0 1px 4px #0001;">{{ grupo.curso.nome }}</span>
+          <span style="margin-left:8px; color:#888;">({{ grupo.disciplinas.length }})</span>
+        </div>
+        <div class="disciplinas-grid" *ngIf="!grupo.collapsed">
+          <div *ngFor="let disciplina of grupo.disciplinas" class="disciplina-card">
+            <!-- Normal View Mode -->
+            <div *ngIf="editingDisciplina?.id !== disciplina.id" class="disciplina-content">
+              <div class="disciplina-header">
+                <h4 class="disciplina-nome">{{ disciplina.nome }}</h4>
+                <span class="disciplina-codigo">{{ disciplina.codigo }}</span>
+              </div>
+              <div class="disciplina-actions">
+                <button 
+                  class="btn btn-small btn-edit"
+                  (click)="startInlineEdit(disciplina)"
+                  title="Editar disciplina">
+                  ✏️ Editar
+                </button>
+                <button 
+                  class="btn btn-small btn-danger"
+                  (click)="deleteDisciplina(disciplina)"
+                  title="Excluir disciplina">
+                  🗑️ Excluir
+                </button>
+              </div>
+            </div>
+            <!-- Inline Edit Mode -->
+            <div *ngIf="editingDisciplina?.id === disciplina.id && editingDisciplina && editingDisciplina.curso" class="disciplina-edit-form">
+              <div class="edit-form-group">
+                <label>Nome:</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editingDisciplina.nome"
+                  class="form-control"
+                  placeholder="Nome da disciplina">
+              </div>
+              <div class="edit-form-group">
+                <label>Código:</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="editingDisciplina.codigo"
+                  class="form-control"
+                  placeholder="Código da disciplina">
+              </div>
+              <div class="edit-form-group">
+                <label>Curso:</label>
+                <select 
+                  [(ngModel)]="editingDisciplina.curso.id"
+                  class="form-control">
+                  <option *ngFor="let curso of cursos" [value]="curso.id">
+                    {{ curso.nome }}
+                  </option>
+                </select>
+              </div>
+              <div class="edit-form-actions">
+                <button 
+                  class="btn btn-small btn-primary"
+                  (click)="saveInlineEdit()">
+                  💾 Salvar
+                </button>
+                <button 
+                  class="btn btn-small btn-secondary"
+                  (click)="cancelInlineEdit()">
+                  ❌ Cancelar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

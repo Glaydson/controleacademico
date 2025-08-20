@@ -15,6 +15,7 @@ import { DebugComponent } from './debug/debug';
 import { CursosComponent } from './cursos/cursos'; // Vamos criar este
 import { SemestresComponent } from './semestres/semestres'; // Implementado
 import { DisciplinasComponent } from './disciplinas/disciplinas'; // Implementado
+import { MatrizCurricularComponent } from './matriz-curricular/matriz-curricular';
 
 
 const routes: Routes = [
@@ -35,29 +36,31 @@ const routes: Routes = [
         data: { roles: ['ADMIN'] } // Apenas usuários com a role 'ADMIN'
       },
       {
-        path: 'gerenciar-pedagogico', // Rota para o HUB da Gestão Pedagógica
+        path: 'gerenciar-pedagogico',
         component: GerenciarPedagogicoComponent,
         canActivate: [RoleGuard],
         data: { roles: ['COORDENADOR'] },
-        children: [ // Rotas filhas do GerenciarPedagogicoComponent
-          { path: '', redirectTo: 'cursos', pathMatch: 'full' }, // Rota padrão para Cursos
+        children: [
+          { path: '', redirectTo: 'cursos', pathMatch: 'full' },
           { path: 'cursos', component: CursosComponent },
-          { path: 'semestres', component: SemestresComponent }, // Implementado
-          { path: 'disciplinas', component: DisciplinasComponent }, // Implementado
+          { path: 'semestres', component: SemestresComponent },
+          { path: 'disciplinas', component: DisciplinasComponent },
+          { path: 'matriz-curricular', component: MatrizCurricularComponent },
         ]
       },
       {
         path: 'montar-matriz',
         component: MontarMatrizComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['COORDENADOR'] } // Apenas usuários com a role 'COORDENADOR'
+        data: { roles: ['COORDENADOR'] }
       },
       {
         path: 'visualizar-matriz',
         component: VisualizarMatrizComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['COORDENADOR', 'PROFESSOR', 'ALUNO'] } // Coordenador, Professor, Aluno
+        data: { roles: ['COORDENADOR', 'PROFESSOR', 'ALUNO'] }
       },
+  // (rotas removidas, agora são filhas de gerenciar-pedagogico)
       {
         path: 'debug',
         component: DebugComponent // Debug route accessible to all authenticated users

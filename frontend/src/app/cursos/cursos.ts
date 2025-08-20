@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -19,7 +20,8 @@ export class CursosComponent implements OnInit {
 
   constructor(
     private cursoService: CursoService,
-    private oidcSecurityService: OidcSecurityService 
+    private oidcSecurityService: OidcSecurityService,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -52,7 +54,7 @@ export class CursosComponent implements OnInit {
       },
       error: (error) => {
         console.error('Erro ao carregar cursos:', error);
-        alert('Erro ao carregar cursos. Verifique o console.');
+        this.toastr.error('Erro ao carregar cursos. Verifique o console.');
       }
     });
   }
@@ -63,15 +65,15 @@ export class CursosComponent implements OnInit {
         next: (cursoCriado) => {
           this.cursos.push(cursoCriado);
           this.novoCurso = { nome: '', codigo: '' }; // Limpa o formulário
-          alert('Curso criado com sucesso!');
+          this.toastr.success('Curso criado com sucesso!');
         },
         error: (error) => {
           console.error('Erro ao criar curso:', error);
-          alert('Erro ao criar curso. Verifique o console.');
+          this.toastr.error('Erro ao criar curso. Verifique o console.');
         }
       });
     } else {
-      alert('Por favor, preencha todos os campos do novo curso.');
+  this.toastr.error('Por favor, preencha todos os campos do novo curso.');
     }
   }
 
@@ -88,15 +90,15 @@ export class CursosComponent implements OnInit {
             this.cursos[index] = cursoAtualizado;
           }
           this.cursoEmEdicao = null;
-          alert('Curso atualizado com sucesso!');
+          this.toastr.success('Curso atualizado com sucesso!');
         },
         error: (error) => {
           console.error('Erro ao atualizar curso:', error);
-          alert('Erro ao atualizar curso. Verifique o console.');
+          this.toastr.error('Erro ao atualizar curso. Verifique o console.');
         }
       });
     } else {
-      alert('Por favor, preencha todos os campos para edição.');
+  this.toastr.error('Por favor, preencha todos os campos para edição.');
     }
   }
 
@@ -106,18 +108,18 @@ export class CursosComponent implements OnInit {
 
   removerCurso(id: number | undefined): void {
     if (id === undefined) {
-      alert('ID do curso não fornecido para remoção.');
+  this.toastr.error('ID do curso não fornecido para remoção.');
       return;
     }
-    if (confirm('Tem certeza que deseja remover este curso?')) {
+  if (confirm('Tem certeza que deseja remover este curso?')) {
       this.cursoService.deleteCurso(id).subscribe({
         next: () => {
           this.cursos = this.cursos.filter(curso => curso.id !== id);
-          alert('Curso removido com sucesso!');
+          this.toastr.success('Curso removido com sucesso!');
         },
         error: (error) => {
           console.error('Erro ao remover curso:', error);
-          alert('Erro ao remover curso. Verifique o console.');
+          this.toastr.error('Erro ao remover curso. Verifique o console.');
         }
       });
     }

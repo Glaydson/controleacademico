@@ -6,6 +6,7 @@ import com.glaydson.controleacademico.rest.dto.CursoResponseDTO;
 import com.glaydson.controleacademico.service.CursoService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -72,6 +73,7 @@ public class CursoResource {
     @PUT
     @Path("/{id}")
     @RolesAllowed({"COORDENADOR"})
+    @Transactional
     public Response atualizarCurso(@PathParam("id") Long id, @Valid CursoRequestDTO cursoDto) { // Receives DTO for update
         try {
             Curso curso = cursoService.atualizarCurso(id, cursoDto); // Service now takes DTO
