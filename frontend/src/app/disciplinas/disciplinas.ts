@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { DisciplinaService } from '../services/disciplina.service';
 import { CursoService } from '../services/curso';
@@ -57,7 +58,8 @@ export class DisciplinasComponent implements OnInit {
   constructor(
     private disciplinaService: DisciplinaService,
     private cursoService: CursoService,
-    private oidcSecurityService: OidcSecurityService
+    private oidcSecurityService: OidcSecurityService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -76,11 +78,13 @@ export class DisciplinasComponent implements OnInit {
           } else {
             console.log('❌ [DISCIPLINAS] Usuário não autenticado');
             this.errorMessage = 'Usuário não autenticado. Por favor, faça login.';
+            this.toastr.error(this.errorMessage);
           }
         },
         error: (error: any) => {
           console.error('❌ [DISCIPLINAS] Erro na verificação de autenticação:', error);
           this.errorMessage = 'Erro na verificação de autenticação';
+          this.toastr.error(this.errorMessage);
         }
       });
     }, 1000);
@@ -105,10 +109,12 @@ export class DisciplinasComponent implements OnInit {
         if (error.status === 401) {
           console.log('🔄 [DISCIPLINAS] Token expirado, aguardando renovação automática...');
           this.errorMessage = 'Sessão expirada. Tentando renovar... Recarregue a página em alguns segundos.';
+          this.toastr.error(this.errorMessage);
           return;
         }
         
-        this.errorMessage = 'Erro ao carregar disciplinas. Tente novamente.';
+  this.errorMessage = 'Erro ao carregar disciplinas. Tente novamente.';
+  this.toastr.error(this.errorMessage);
         this.isLoading = false;
       }
     });
@@ -141,7 +147,8 @@ export class DisciplinasComponent implements OnInit {
       error: (error) => {
         console.error('❌ [DISCIPLINAS] Erro ao carregar cursos:', error);
         if (error.status !== 401) { // Don't show error for token expiration
-          this.errorMessage = 'Erro ao carregar cursos. Algumas funcionalidades podem não funcionar.';
+    this.errorMessage = 'Erro ao carregar cursos. Algumas funcionalidades podem não funcionar.';
+    this.toastr.error(this.errorMessage);
         }
       }
     });
@@ -191,7 +198,8 @@ export class DisciplinasComponent implements OnInit {
       next: (novaDisciplina) => {
         console.log('✅ [DISCIPLINAS] Disciplina criada:', novaDisciplina);
         this.loadDisciplinas(); // Reload to get updated list
-        this.successMessage = 'Disciplina criada com sucesso!';
+  this.successMessage = 'Disciplina criada com sucesso!';
+  this.toastr.success(this.successMessage);
         this.cancelForm();
         this.isLoading = false;
         this.clearSuccessAfterDelay();
@@ -202,6 +210,7 @@ export class DisciplinasComponent implements OnInit {
         if (error.status === 401) {
           console.log('🔄 [DISCIPLINAS] Token expirado durante criação, aguardando renovação automática...');
           this.errorMessage = 'Sessão expirada. Tentando renovar... Tente criar novamente em alguns segundos.';
+          this.toastr.error(this.errorMessage);
           this.isLoading = false;
           
           setTimeout(() => {
@@ -212,8 +221,10 @@ export class DisciplinasComponent implements OnInit {
         
         if (error.error && typeof error.error === 'string') {
           this.errorMessage = error.error;
+          this.toastr.error(this.errorMessage);
         } else {
           this.errorMessage = 'Erro ao criar disciplina. Tente novamente.';
+          this.toastr.error(this.errorMessage);
         }
         this.isLoading = false;
       }
@@ -226,13 +237,15 @@ export class DisciplinasComponent implements OnInit {
     );
     
     if (disciplinaIndex === -1) {
-      this.errorMessage = 'Disciplina não encontrada para atualização.';
+  this.errorMessage = 'Disciplina não encontrada para atualização.';
+  this.toastr.error(this.errorMessage);
       return;
     }
 
     const disciplinaId = this.disciplinas[disciplinaIndex].id;
     if (!disciplinaId) {
-      this.errorMessage = 'ID da disciplina não encontrado.';
+  this.errorMessage = 'ID da disciplina não encontrado.';
+  this.toastr.error(this.errorMessage);
       return;
     }
 
@@ -255,7 +268,8 @@ export class DisciplinasComponent implements OnInit {
       next: (disciplinaAtualizada) => {
         console.log('✅ [DISCIPLINAS] Disciplina atualizada:', disciplinaAtualizada);
         this.loadDisciplinas(); // Reload to get updated list
-        this.successMessage = 'Disciplina atualizada com sucesso!';
+  this.successMessage = 'Disciplina atualizada com sucesso!';
+  this.toastr.success(this.successMessage);
         this.cancelForm();
         this.isLoading = false;
         this.clearSuccessAfterDelay();
@@ -266,6 +280,7 @@ export class DisciplinasComponent implements OnInit {
         if (error.status === 401) {
           console.log('🔄 [DISCIPLINAS] Token expirado durante atualização, aguardando renovação automática...');
           this.errorMessage = 'Sessão expirada. Tentando renovar... Tente atualizar novamente em alguns segundos.';
+          this.toastr.error(this.errorMessage);
           this.isLoading = false;
           
           setTimeout(() => {
@@ -276,8 +291,10 @@ export class DisciplinasComponent implements OnInit {
         
         if (error.error && typeof error.error === 'string') {
           this.errorMessage = error.error;
+          this.toastr.error(this.errorMessage);
         } else {
           this.errorMessage = 'Erro ao atualizar disciplina. Tente novamente.';
+          this.toastr.error(this.errorMessage);
         }
         this.isLoading = false;
       }
@@ -296,7 +313,8 @@ export class DisciplinasComponent implements OnInit {
       next: () => {
         console.log('✅ [DISCIPLINAS] Disciplina deletada');
         this.disciplinas = this.disciplinas.filter(d => d.id !== disciplina.id);
-        this.successMessage = 'Disciplina excluída com sucesso!';
+  this.successMessage = 'Disciplina excluída com sucesso!';
+  this.toastr.success(this.successMessage);
         this.clearSuccessAfterDelay();
       },
       error: (error) => {
@@ -305,6 +323,7 @@ export class DisciplinasComponent implements OnInit {
         if (error.status === 401) {
           console.log('🔄 [DISCIPLINAS] Token expirado durante exclusão, aguardando renovação automática...');
           this.errorMessage = 'Sessão expirada. Tentando renovar... Tente excluir novamente em alguns segundos.';
+          this.toastr.error(this.errorMessage);
           
           setTimeout(() => {
             this.errorMessage = '';
