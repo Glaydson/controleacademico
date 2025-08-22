@@ -7,6 +7,7 @@ public class DisciplinaResponseDTO {
     public String nome;
     public String codigo;
     public CursoResponseDTO curso; // Single curso instead of Set<CursoResponseDTO>
+    public ProfessorResponseDTO professor;
 
     public DisciplinaResponseDTO() {}
 
@@ -19,6 +20,10 @@ public class DisciplinaResponseDTO {
             // Use simplified constructor to avoid circular references and lazy loading issues
             this.curso = new CursoResponseDTO(disciplina.getCurso(), true);
         }
+        if (disciplina.getProfessor() != null) {
+            // Use o novo construtor para evitar referência circular
+            this.professor = new ProfessorResponseDTO(disciplina.getProfessor(), false);
+        }
     }
 
     // Getters e Setters
@@ -30,4 +35,6 @@ public class DisciplinaResponseDTO {
     public void setCodigo(String codigo) { this.codigo = codigo; }
     public CursoResponseDTO getCurso() { return curso; }
     public void setCurso(CursoResponseDTO curso) { this.curso = curso; }
+    public ProfessorResponseDTO getProfessor() { return professor; }
+    public void setProfessor(ProfessorResponseDTO professor) { this.professor = professor; }
 }

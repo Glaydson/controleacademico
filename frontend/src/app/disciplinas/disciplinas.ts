@@ -4,6 +4,8 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { DisciplinaService } from '../services/disciplina.service';
 import { CursoService } from '../services/curso';
 import { Disciplina, CreateDisciplinaRequest, UpdateDisciplinaRequest } from '../models/disciplina.model';
+import { Usuario } from '../models/usuario.model';
+import { ProfessorService } from '../services/professor.service';
 import { Curso } from '../models/curso.model';
 
 @Component({
@@ -13,6 +15,21 @@ import { Curso } from '../models/curso.model';
   standalone: false
 })
 export class DisciplinasComponent implements OnInit {
+  get editingProfessorId(): string | null {
+    return this.editingDisciplina && this.editingDisciplina.professor ? this.editingDisciplina.professor.id ?? null : null;
+  }
+
+  set editingProfessorId(id: string | null) {
+    if (this.editingDisciplina) {
+      if (!this.editingDisciplina.professor) {
+        this.editingDisciplina.professor = { id: undefined, nome: '' };
+      }
+      this.editingDisciplina.professor.id = id ?? undefined;
+      // Optionally update nome if you want to show it immediately
+      const found = this.professores.find(p => p.id === id);
+      if (found) this.editingDisciplina.professor.nome = found.nome;
+    }
+  }
   groupDisciplinasByCurso(): void {
     const map = new Map<number, { curso: Curso, disciplinas: Disciplina[] }>();
     for (const d of this.disciplinas) {
@@ -33,6 +50,7 @@ export class DisciplinasComponent implements OnInit {
   // Data
   disciplinas: Disciplina[] = [];
   cursos: Curso[] = [];
+  professores: Usuario[] = [];
   disciplinasPorCurso: { curso: Curso, disciplinas: Disciplina[], collapsed: boolean }[] = [];
   
   // Form state
@@ -58,13 +76,13 @@ export class DisciplinasComponent implements OnInit {
   constructor(
     private disciplinaService: DisciplinaService,
     private cursoService: CursoService,
+    private professorService: ProfessorService,
     private oidcSecurityService: OidcSecurityService,
     private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
     console.log('🚀 [DISCIPLINAS] Componente inicializado');
-    
     // Wait for authentication to stabilize
     setTimeout(() => {
       this.oidcSecurityService.isAuthenticated$.subscribe({
@@ -74,6 +92,7 @@ export class DisciplinasComponent implements OnInit {
             setTimeout(() => {
               this.loadDisciplinas();
               this.loadCursos();
+              this.loadProfessores();
             }, 200);
           } else {
             console.log('❌ [DISCIPLINAS] Usuário não autenticado');
@@ -88,6 +107,19 @@ export class DisciplinasComponent implements OnInit {
         }
       });
     }, 1000);
+  }
+
+  loadProfessores(): void {
+    this.professorService.getProfessores().subscribe({
+      next: (professores) => {
+        console.log('[DEBUG] Professores loaded from backend:', professores);
+        this.professores = professores;
+      },
+      error: (error) => {
+        console.error('[ERROR] Failed to load professores:', error);
+        this.toastr.error('Erro ao carregar professores.');
+      }
+    });
   }
 
   loadDisciplinas(): void {
@@ -261,7 +293,8 @@ export class DisciplinasComponent implements OnInit {
     const updateData: UpdateDisciplinaRequest = {
       nome: this.formData.nome,
       codigo: this.formData.codigo,
-      cursoId: this.formData.cursoId
+      cursoId: this.formData.cursoId,
+      professorId: this.editingProfessorId ?? null
     };
     
     this.disciplinaService.updateDisciplina(disciplinaId, updateData).subscribe({
@@ -343,8 +376,11 @@ export class DisciplinasComponent implements OnInit {
   // Inline editing methods
   startInlineEdit(disciplina: Disciplina): void {
     console.log('✏️ [DISCIPLINAS] Iniciando edição inline:', disciplina);
-    this.editingDisciplina = { ...disciplina };
-    this.originalEditingData = { ...disciplina };
+      this.editingDisciplina = { ...disciplina };
+      if (!this.editingDisciplina.professor) {
+        this.editingDisciplina.professor = { id: undefined, nome: '' };
+      }
+      this.originalEditingData = { ...disciplina };
     this.clearMessages();
   }
 
@@ -375,7 +411,8 @@ export class DisciplinasComponent implements OnInit {
     const updateData: UpdateDisciplinaRequest = {
       nome: this.editingDisciplina.nome,
       codigo: this.editingDisciplina.codigo,
-      cursoId: this.editingDisciplina.curso.id
+      cursoId: this.editingDisciplina.curso.id,
+      professorId: this.editingDisciplina.professor?.id ?? null
     };
     
     this.disciplinaService.updateDisciplina(this.editingDisciplina.id, updateData).subscribe({

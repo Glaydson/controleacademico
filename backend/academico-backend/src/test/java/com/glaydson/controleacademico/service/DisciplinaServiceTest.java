@@ -2,8 +2,10 @@ package com.glaydson.controleacademico.service;
 
 import com.glaydson.controleacademico.domain.model.Curso;
 import com.glaydson.controleacademico.domain.model.Disciplina;
+import com.glaydson.controleacademico.domain.model.Professor;
 import com.glaydson.controleacademico.domain.repository.CursoRepository;
 import com.glaydson.controleacademico.domain.repository.DisciplinaRepository;
+import com.glaydson.controleacademico.domain.repository.ProfessorRepository;
 import com.glaydson.controleacademico.rest.dto.DisciplinaRequestDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -33,8 +35,12 @@ public class DisciplinaServiceTest {
     @Inject
     CursoRepository cursoRepository;
 
+    @Inject
+    ProfessorRepository professorRepository;
+
     private Curso curso1;
     private Curso curso2;
+    private Professor professor;
 
     @BeforeEach
     @Transactional
@@ -42,6 +48,7 @@ public class DisciplinaServiceTest {
         // Clean up existing data
         disciplinaRepository.deleteAll();
         cursoRepository.deleteAll();
+        Professor.deleteAll();
 
         // Create test cursos
         curso1 = new Curso("Ciência da Computação", "CC001");
@@ -49,6 +56,9 @@ public class DisciplinaServiceTest {
 
         curso2 = new Curso("Engenharia de Software", "ES001");
         curso2.persist();
+
+        professor = new Professor("Prof. Teste", "REG123", null, "keycloak-prof-1");
+        professor.persist();
     }
 
     @Test
@@ -57,7 +67,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
             "Algoritmos e Estruturas de Dados",
             "AED001",
-            curso1.id
+            curso1.id,
+            null
         );
 
         // When
@@ -79,7 +90,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
             "Disciplina Teste",
             "TEST001",
-            999L // ID inexistente
+            999L, // ID inexistente
+            null
         );
 
         // When & Then
@@ -97,7 +109,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplina1 = new DisciplinaRequestDTO(
             "Primeira Disciplina",
             "CODIGO001",
-            curso1.id
+            curso1.id,
+            null
         );
         disciplinaService.criarDisciplina(disciplina1);
 
@@ -105,7 +118,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplina2 = new DisciplinaRequestDTO(
             "Segunda Disciplina",
             "CODIGO001", // Mesmo código
-            curso2.id
+            curso2.id,
+            null
         );
 
         // When & Then
@@ -123,7 +137,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplina1 = new DisciplinaRequestDTO(
             "Nome Repetido",
             "CODIGO001",
-            curso1.id
+            curso1.id,
+            null
         );
         disciplinaService.criarDisciplina(disciplina1);
 
@@ -131,7 +146,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplina2 = new DisciplinaRequestDTO(
             "Nome Repetido", // Mesmo nome
             "CODIGO002",
-            curso2.id
+            curso2.id,
+            null
         );
 
         // When & Then
@@ -149,7 +165,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
             "Banco de Dados",
             "BD001",
-            curso1.id
+            curso1.id,
+            null
         );
         Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaDto);
 
@@ -179,7 +196,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
             "Sistemas Operacionais",
             "SO001",
-            curso1.id
+            curso1.id,
+            null
         );
         disciplinaService.criarDisciplina(disciplinaDto);
 
@@ -208,12 +226,14 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplina1 = new DisciplinaRequestDTO(
             "Matemática Discreta",
             "MAT001",
-            curso1.id
+            curso1.id,
+            null
         );
         DisciplinaRequestDTO disciplina2 = new DisciplinaRequestDTO(
             "Arquitetura de Computadores",
             "ARQ001",
-            curso2.id
+            curso2.id,
+            null
         );
 
         disciplinaService.criarDisciplina(disciplina1);
@@ -241,7 +261,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaOriginal = new DisciplinaRequestDTO(
             "Programação I",
             "PROG001",
-            curso1.id
+            curso1.id,
+            null
         );
         Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaOriginal);
 
@@ -249,7 +270,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaAtualizada = new DisciplinaRequestDTO(
             "Programação Avançada",
             "PROG002",
-            curso2.id // Mudando para outro curso
+            curso2.id, // Mudando para outro curso
+            null
         );
 
         // When
@@ -270,7 +292,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
             "Disciplina Inexistente",
             "INX001",
-            curso1.id
+            curso1.id,
+            null
         );
 
         // When & Then
@@ -288,14 +311,16 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplina1 = new DisciplinaRequestDTO(
             "Primeira Disciplina",
             "CODIGO001",
-            curso1.id
+            curso1.id,
+            null
         );
         Disciplina d1 = disciplinaService.criarDisciplina(disciplina1);
 
         DisciplinaRequestDTO disciplina2 = new DisciplinaRequestDTO(
             "Segunda Disciplina",
             "CODIGO002",
-            curso2.id
+            curso2.id,
+            null
         );
         Disciplina d2 = disciplinaService.criarDisciplina(disciplina2);
 
@@ -303,7 +328,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaAtualizada = new DisciplinaRequestDTO(
             "Segunda Disciplina Atualizada",
             "CODIGO001", // Código já existe
-            curso2.id
+            curso2.id,
+            null
         );
 
         // When & Then
@@ -321,14 +347,16 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplina1 = new DisciplinaRequestDTO(
             "Nome Existente",
             "CODIGO001",
-            curso1.id
+            curso1.id,
+            null
         );
         Disciplina d1 = disciplinaService.criarDisciplina(disciplina1);
 
         DisciplinaRequestDTO disciplina2 = new DisciplinaRequestDTO(
             "Outro Nome",
             "CODIGO002",
-            curso2.id
+            curso2.id,
+            null
         );
         Disciplina d2 = disciplinaService.criarDisciplina(disciplina2);
 
@@ -336,7 +364,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaAtualizada = new DisciplinaRequestDTO(
             "Nome Existente", // Nome já existe
             "CODIGO003",
-            curso2.id
+            curso2.id,
+            null
         );
 
         // When & Then
@@ -354,7 +383,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaOriginal = new DisciplinaRequestDTO(
             "Disciplina Teste",
             "TEST001",
-            curso1.id
+            curso1.id,
+            null
         );
         Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaOriginal);
 
@@ -362,7 +392,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaAtualizada = new DisciplinaRequestDTO(
             "Disciplina Teste Atualizada",
             "TEST002",
-            999L // Curso inexistente
+            999L, // Curso inexistente
+            null
         );
 
         // When & Then
@@ -380,7 +411,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
             "Disciplina para Deletar",
             "DEL001",
-            curso1.id
+            curso1.id,
+            null
         );
         Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaDto);
 
@@ -410,7 +442,8 @@ public class DisciplinaServiceTest {
         DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
             "Teste Relacionamento",
             "REL001",
-            curso1.id
+            curso1.id,
+            null
         );
         Disciplina disciplina = disciplinaService.criarDisciplina(disciplinaDto);
 
@@ -423,5 +456,72 @@ public class DisciplinaServiceTest {
         assertEquals(curso1.id, disciplinaEncontrada.get().curso.id);
         assertEquals(curso1.nome, disciplinaEncontrada.get().curso.nome);
         assertEquals(curso1.codigo, disciplinaEncontrada.get().curso.codigo);
+    }
+
+    @Test
+    public void testCriarDisciplinaComProfessor() {
+        DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
+            "Machine Learning",
+            "ML001",
+            curso1.id,
+            professor.id
+        );
+        Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaDto);
+        assertNotNull(disciplinaCriada);
+        assertNotNull(disciplinaCriada.professor);
+        assertEquals(professor.id, disciplinaCriada.professor.id);
+        assertEquals("Prof. Teste", disciplinaCriada.professor.nome);
+    }
+
+    @Test
+    public void testCriarDisciplinaSemProfessor() {
+        DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
+            "Deep Learning",
+            "DL001",
+            curso1.id,
+            null
+        );
+        Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaDto);
+        assertNotNull(disciplinaCriada);
+        assertNull(disciplinaCriada.professor);
+    }
+
+    @Test
+    public void testAtualizarDisciplinaProfessor() {
+        DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
+            "IA Avançada",
+            "IAA001",
+            curso1.id,
+            null
+        );
+        Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaDto);
+        DisciplinaRequestDTO atualizada = new DisciplinaRequestDTO(
+            "IA Avançada",
+            "IAA001",
+            curso1.id,
+            professor.id
+        );
+        Disciplina disciplinaResult = disciplinaService.atualizarDisciplina(disciplinaCriada.id, atualizada);
+        assertNotNull(disciplinaResult.professor);
+        assertEquals(professor.id, disciplinaResult.professor.id);
+    }
+
+    @Test
+    public void testRemoverProfessorDaDisciplina() {
+        DisciplinaRequestDTO disciplinaDto = new DisciplinaRequestDTO(
+            "IA Básica",
+            "IAB001",
+            curso1.id,
+            professor.id
+        );
+        Disciplina disciplinaCriada = disciplinaService.criarDisciplina(disciplinaDto);
+        DisciplinaRequestDTO atualizada = new DisciplinaRequestDTO(
+            "IA Básica",
+            "IAB001",
+            curso1.id,
+            null
+        );
+        Disciplina disciplinaResult = disciplinaService.atualizarDisciplina(disciplinaCriada.id, atualizada);
+        assertNull(disciplinaResult.professor);
     }
 }

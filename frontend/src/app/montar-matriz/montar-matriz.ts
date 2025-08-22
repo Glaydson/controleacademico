@@ -134,7 +134,9 @@ export class MontarMatrizComponent implements OnInit {
 
   removePeriodo(idx: number): void {
     if (!this.matriz) return;
-    this.matriz.periodos.splice(idx, 1);
+    if (confirm('Tem certeza que deseja remover este período?')) {
+      this.matriz.periodos.splice(idx, 1);
+    }
   }
 
   addDisciplinaToPeriodo(periodo: PeriodoMatriz, disciplina: Disciplina | null): void {
@@ -219,6 +221,7 @@ export class MontarMatrizComponent implements OnInit {
 
   deleteMatriz(): void {
     if (!this.matriz || !this.matriz.id) return;
+    if (!confirm('Tem certeza que deseja remover esta matriz curricular?')) return;
     this.isLoading = true;
     this.matrizService.deleteMatriz(this.matriz.id).subscribe({
       next: () => {

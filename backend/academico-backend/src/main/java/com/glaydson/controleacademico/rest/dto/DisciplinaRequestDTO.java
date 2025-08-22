@@ -17,12 +17,15 @@ public class DisciplinaRequestDTO {
     @NotNull(message = "O ID do curso é obrigatório.")
     public Long cursoId; // ID do curso ao qual a disciplina pertence
 
+    public Long professorId; // ID do professor responsável (opcional)
+
     public DisciplinaRequestDTO() {}
 
-    public DisciplinaRequestDTO(String nome, String codigo, Long cursoId) {
+    public DisciplinaRequestDTO(String nome, String codigo, Long cursoId, Long professorId) {
         this.nome = nome;
         this.codigo = codigo;
         this.cursoId = cursoId;
+        this.professorId = professorId;
     }
 
     // Getters e Setters
@@ -32,4 +35,6 @@ public class DisciplinaRequestDTO {
     public void setCodigo(String codigo) { this.codigo = codigo; }
     public Long getCursoId() { return cursoId; }
     public void setCursoId(Long cursoId) { this.cursoId = cursoId; }
+    public Long getProfessorId() { return professorId; }
+    public void setProfessorId(Long professorId) { this.professorId = professorId; }
 }

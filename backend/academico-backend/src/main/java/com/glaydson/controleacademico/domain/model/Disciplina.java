@@ -26,6 +26,11 @@ public class Disciplina extends PanacheEntityBase {
     @JoinColumn(name = "curso_id", nullable = false)
     public Curso curso; // Curso ao qual esta disciplina pertence
 
+    // Relacionamento Many-to-One com Professor (opcional)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "professor_id")
+    public Professor professor; // Professor responsável pela disciplina (opcional)
+
     // Construtores
     public Disciplina() {
     }
@@ -73,5 +78,13 @@ public class Disciplina extends PanacheEntityBase {
 
     public void setCurso(Curso curso) {
         this.curso = curso;
+    }
+
+    public Professor getProfessor() {
+        return professor;
+    }
+
+    public void setProfessor(Professor professor) {
+        this.professor = professor;
     }
 }

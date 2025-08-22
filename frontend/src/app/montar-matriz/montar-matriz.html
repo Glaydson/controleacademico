@@ -33,7 +33,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr *ngFor="let periodo of matriz.periodos; let i = index">
+							<tr *ngFor="let periodo of matriz.periodos; let i = index" class="periodo-row">
 								<td>{{ periodo.numero }}</td>
 								<td>
 									<div class="disciplinas-list">
@@ -42,18 +42,18 @@
 											<button type="button" class="btn btn-xs btn-danger" (click)="removeDisciplinaFromPeriodo(periodo, disc.id)">×</button>
 										</span>
 									</div>
-									<div class="add-disciplina-section">
-															<select class="form-input form-input-sm" [(ngModel)]="selectedDisciplina[periodo.numero]">
-																<option [ngValue]="null">Adicionar disciplina...</option>
-																<option *ngFor="let d of getAvailableDisciplinas()" [ngValue]="d">
-																	{{ d.nome }}
-																</option>
-															</select>
-										<button type="button" class="btn btn-xs btn-secondary" (click)="selectedDisciplina[periodo.numero] && addDisciplinaToPeriodo(periodo, selectedDisciplina[periodo.numero]); selectedDisciplina[periodo.numero]=null" [disabled]="!selectedDisciplina[periodo.numero]">Adicionar</button>
-									</div>
 								</td>
 								<td>
-									<button class="btn btn-danger btn-xs" (click)="removePeriodo(i)">Remover Período</button>
+									<div class="add-disciplina-section">
+										<select class="form-input form-input-sm" [(ngModel)]="selectedDisciplina[periodo.numero]">
+											<option [ngValue]="null">Adicionar disciplina...</option>
+											<option *ngFor="let d of getAvailableDisciplinas()" [ngValue]="d">
+												{{ d.nome }}
+											</option>
+										</select>
+										<button type="button" class="btn btn-xs btn-secondary" (click)="selectedDisciplina[periodo.numero] && addDisciplinaToPeriodo(periodo, selectedDisciplina[periodo.numero]); selectedDisciplina[periodo.numero]=null" [disabled]="!selectedDisciplina[periodo.numero]">Adicionar</button>
+									</div>
+									<button class="btn btn-danger btn-xs" style="margin-top: 10px;" (click)="removePeriodo(i)">Remover Período</button>
 								</td>
 							</tr>
 						</tbody>

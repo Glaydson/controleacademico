@@ -78,6 +78,22 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="form-group">
+          <label for="professor">Professor</label>
+          <select 
+            id="professor"
+            [(ngModel)]="formData.professorId"
+            name="professor"
+            class="form-control">
+            <option [ngValue]="null">Selecione um professor (opcional)</option>
+            <option *ngFor="let prof of professores" [ngValue]="prof.id">
+              {{ prof.nome }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button 
           type="submit"
@@ -114,6 +130,10 @@
               <div class="disciplina-header">
                 <h4 class="disciplina-nome">{{ disciplina.nome }}</h4>
                 <span class="disciplina-codigo">{{ disciplina.codigo }}</span>
+              </div>
+              <div class="disciplina-professor" *ngIf="disciplina.professor">
+                <span class="professor-label">Professor:</span>
+                <span class="professor-nome">{{ disciplina.professor.nome }}</span>
               </div>
               <div class="disciplina-actions">
                 <button 
@@ -155,6 +175,17 @@
                   class="form-control">
                   <option *ngFor="let curso of cursos" [value]="curso.id">
                     {{ curso.nome }}
+                  </option>
+                </select>
+              </div>
+              <div class="edit-form-group">
+                <label>Professor:</label>
+                <select 
+                  [(ngModel)]="editingProfessorId"
+                  class="form-control">
+                  <option [ngValue]="null">Selecione um professor (opcional)</option>
+                  <option *ngFor="let prof of professores" [ngValue]="prof.id">
+                    {{ prof.nome }}
                   </option>
                 </select>
               </div>

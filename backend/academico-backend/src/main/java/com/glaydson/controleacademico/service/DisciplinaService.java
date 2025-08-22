@@ -4,6 +4,7 @@ import com.glaydson.controleacademico.domain.model.Curso;
 import com.glaydson.controleacademico.domain.model.Disciplina;
 import com.glaydson.controleacademico.domain.repository.CursoRepository;
 import com.glaydson.controleacademico.domain.repository.DisciplinaRepository;
+import com.glaydson.controleacademico.domain.repository.ProfessorRepository;
 import com.glaydson.controleacademico.rest.dto.DisciplinaRequestDTO;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -18,10 +19,12 @@ public class DisciplinaService {
 
     DisciplinaRepository disciplinaRepository;
     CursoRepository cursoRepository;
+    ProfessorRepository professorRepository;
 
-    public DisciplinaService(DisciplinaRepository disciplinaRepository, CursoRepository cursoRepository) {
+    public DisciplinaService(DisciplinaRepository disciplinaRepository, CursoRepository cursoRepository, ProfessorRepository professorRepository) {
         this.disciplinaRepository = disciplinaRepository;
         this.cursoRepository = cursoRepository;
+        this.professorRepository = professorRepository;
     }
 
     public List<Disciplina> listarTodasDisciplinas() {
@@ -52,7 +55,13 @@ public class DisciplinaService {
 
         // Create new disciplina
         Disciplina disciplina = new Disciplina(disciplinaDto.getNome(), disciplinaDto.getCodigo(), curso);
-
+        // Handle professor assignment
+        if (disciplinaDto.getProfessorId() != null) {
+            var professor = professorRepository.findByIdOptional(disciplinaDto.getProfessorId())
+                .orElseThrow(() -> new NotFoundException("Professor com ID " + disciplinaDto.getProfessorId() + " não encontrado."));
+            disciplina.setProfessor(professor);
+            professor.getDisciplinas().add(disciplina);
+        }
         disciplinaRepository.persist(disciplina);
         return disciplina;
     }
@@ -80,7 +89,22 @@ public class DisciplinaService {
         disciplinaExistente.setNome(disciplinaDto.getNome());
         disciplinaExistente.setCodigo(disciplinaDto.getCodigo());
         disciplinaExistente.setCurso(novoCurso);
-
+        // Handle professor update
+        var oldProfessor = disciplinaExistente.getProfessor();
+        if (disciplinaDto.getProfessorId() != null) {
+            var newProfessor = professorRepository.findByIdOptional(disciplinaDto.getProfessorId())
+                .orElseThrow(() -> new NotFoundException("Professor com ID " + disciplinaDto.getProfessorId() + " não encontrado."));
+            if (oldProfessor != null && !oldProfessor.equals(newProfessor)) {
+                oldProfessor.getDisciplinas().remove(disciplinaExistente);
+            }
+            disciplinaExistente.setProfessor(newProfessor);
+            newProfessor.getDisciplinas().add(disciplinaExistente);
+        } else {
+            if (oldProfessor != null) {
+                oldProfessor.getDisciplinas().remove(disciplinaExistente);
+            }
+            disciplinaExistente.setProfessor(null);
+        }
         return disciplinaExistente;
     }
 
@@ -90,7 +114,10 @@ public class DisciplinaService {
         if (disciplinaOpt.isEmpty()) {
             return false;
         }
-
+        Disciplina disciplina = disciplinaOpt.get();
+        if (disciplina.getProfessor() != null) {
+            disciplina.getProfessor().getDisciplinas().remove(disciplina);
+        }
         return disciplinaRepository.deleteById(id);
     }
 }

@@ -808,4 +808,16 @@ public class UserService {
             }
         }
     }
+
+    public List<UserRepresentation> getUsersByRole(String roleName) {
+        Keycloak keycloak = null;
+        try {
+            keycloak = getKeycloakAdminClient();
+            return new java.util.ArrayList<>(keycloak.realm(realm).roles().get(roleName).getRoleUserMembers());
+        } catch (Exception e) {
+            // Log error and return empty list
+            System.err.println("Error fetching users by role: " + roleName + ", " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
 }

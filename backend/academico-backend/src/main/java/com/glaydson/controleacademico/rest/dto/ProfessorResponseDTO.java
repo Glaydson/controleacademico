@@ -14,12 +14,17 @@ public class ProfessorResponseDTO {
 
     // Construtor para converter da entidade Professor para o DTO
     public ProfessorResponseDTO(Professor professor) {
+        this(professor, true);
+    }
+
+    // Novo construtor: permite controlar se disciplinas devem ser incluídas
+    public ProfessorResponseDTO(Professor professor, boolean includeDisciplinas) {
         this.id = professor.id;
         this.nome = professor.nome;
         this.matricula = professor.getRegistro();
-        if (professor.disciplinas != null) {
+        if (includeDisciplinas && professor.disciplinas != null) {
             this.disciplinas = professor.disciplinas.stream()
-                    .map(DisciplinaResponseDTO::new)
+                    .map(d -> new DisciplinaResponseDTO(d))
                     .collect(Collectors.toSet());
         }
     }

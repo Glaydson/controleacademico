@@ -2,6 +2,7 @@ package com.glaydson.controleacademico.rest;
 
 import com.glaydson.controleacademico.domain.model.Professor;
 import com.glaydson.controleacademico.service.ProfessorService;
+import com.glaydson.controleacademico.rest.dto.ProfessorResponseDTO;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.*;
@@ -25,8 +26,10 @@ public class ProfessorResource {
 
     @GET
     @RolesAllowed({"ADMIN", "COORDENADOR", "PROFESSOR"}) // Professores podem ver outros professores
-    public List<Professor> listarTodosProfessores() {
-        return professorService.listarTodosProfessores();
+    public List<ProfessorResponseDTO> listarTodosProfessores() {
+        return professorService.listarTodosProfessores().stream()
+            .map(professor -> new ProfessorResponseDTO(professor, false))
+            .toList();
     }
 
     @GET

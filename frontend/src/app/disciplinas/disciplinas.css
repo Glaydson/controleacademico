@@ -1,3 +1,26 @@
+/* Highlight professor name for better visibility */
+.disciplina-professor {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #f0f4fa;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.professor-label {
+  color: #1a237e;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.professor-nome {
+  color: #222;
+  font-weight: 700;
+  background: #e3eafc;
+  padding: 2px 8px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(26,35,126,0.04);
+}
 .disciplinas-container {
   max-width: 1200px;
   margin: 0 auto;

@@ -1,0 +1,62 @@
+.matriz-table td:first-child {
+	background: #e3eaff;
+	color: #1a237e;
+	font-weight: bold;
+	border-radius: 8px 0 0 8px;
+	box-shadow: 0 1px 4px #0001;
+}
+/* Add spacing and visual separation between periodos */
+.matriz-table .periodo-row {
+	border-bottom: 2px solid #e0e0e0;
+	background: #fafbfc;
+}
+
+.matriz-table .periodo-row td {
+	padding: 18px 12px 18px 12px;
+	vertical-align: top;
+}
+
+.disciplinas-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+
+.disciplina-badge {
+	background: #e3eaff;
+	color: #1a237e;
+	border-radius: 16px;
+	padding: 4px 12px 4px 8px;
+	font-size: 0.98em;
+	display: flex;
+	align-items: center;
+	box-shadow: 0 1px 3px #0001;
+}
+
+.add-disciplina-section {
+	margin-top: 6px;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.matriz-table {
+	border-collapse: separate;
+	border-spacing: 0 10px;
+	width: 100%;
+}
+
+.matriz-table th {
+	background: #1a237e;
+	color: #fff;
+	font-weight: 600;
+	padding: 12px 8px;
+	border-radius: 4px 4px 0 0;
+}
+
+.matriz-table td {
+	background: #fff;
+	border-radius: 4px;
+	box-shadow: 0 1px 4px #0001;
+}
